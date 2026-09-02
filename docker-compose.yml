@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  postgis:
+    image: postgis/postgis:16-3.4
+    container_name: thermivex_postgis
+    environment:
+      POSTGRES_DB: thermivex
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgis_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: thermivex_backend
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgrespassword@postgis:5432/thermivex
+      - NASA_FIRMS_MAP_KEY=${NASA_FIRMS_MAP_KEY:-DEMO_KEY}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgis
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: thermivex_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgis_data:

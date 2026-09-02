@@ -1,0 +1,62 @@
+[
+  {
+    "osm_id": "way_491823912",
+    "name": "Bharat Petrochemical Terminal #4 (Dahej)",
+    "landuse": "industrial",
+    "industrial_type": "oil_storage",
+    "hazard_tier": 5,
+    "latitude": 21.6842,
+    "longitude": 72.5831,
+    "geometry_geojson": "{\"type\":\"Polygon\",\"coordinates\":[[[72.579,21.681],[72.587,21.681],[72.587,21.688],[72.579,21.688],[72.579,21.681]]]}"
+  },
+  {
+    "osm_id": "way_582910344",
+    "name": "Reliance Jamnagar Refinery Complex (Stack 12)",
+    "landuse": "industrial",
+    "industrial_type": "refinery",
+    "hazard_tier": 5,
+    "latitude": 22.3412,
+    "longitude": 69.8324,
+    "geometry_geojson": "{\"type\":\"Polygon\",\"coordinates\":[[[69.825,22.335],[69.840,22.335],[69.840,22.348],[69.825,22.348],[69.825,22.335]]]}"
+  },
+  {
+    "osm_id": "way_319482711",
+    "name": "GIDC Panoli Chemical Processing Estate",
+    "landuse": "industrial",
+    "industrial_type": "chemical",
+    "hazard_tier": 4,
+    "latitude": 21.5310,
+    "longitude": 72.9642,
+    "geometry_geojson": "{\"type\":\"Polygon\",\"coordinates\":[[[72.958,21.526],[72.970,21.526],[72.970,21.536],[72.958,21.536],[72.958,21.526]]]}"
+  },
+  {
+    "osm_id": "way_819203948",
+    "name": "IMT Manesar Automobile Manufacturing Corridor",
+    "landuse": "industrial",
+    "industrial_type": "manufacturing",
+    "hazard_tier": 3,
+    "latitude": 28.3614,
+    "longitude": 76.9248,
+    "geometry_geojson": "{\"type\":\"Polygon\",\"coordinates\":[[[76.918,28.355],[76.932,28.355],[76.932,28.368],[76.918,28.368],[76.918,28.355]]]}"
+  },
+  {
+    "osm_id": "way_992182741",
+    "name": "BPCL Chembur Fertilizer & Refinery Zone (Mumbai)",
+    "landuse": "industrial",
+    "industrial_type": "petrochemical",
+    "hazard_tier": 5,
+    "latitude": 19.0125,
+    "longitude": 72.8941,
+    "geometry_geojson": "{\"type\":\"Polygon\",\"coordinates\":[[[72.888,19.006],[72.901,19.006],[72.901,19.018],[72.888,19.018],[72.888,19.006]]]}"
+  },
+  {
+    "osm_id": "way_772918342",
+    "name": "Ludhiana Industrial Focal Point (Phase IV)",
+    "landuse": "industrial",
+    "industrial_type": "metallurgical",
+    "hazard_tier": 3,
+    "latitude": 30.8712,
+    "longitude": 75.9124,
+    "geometry_geojson": "{\"type\":\"Polygon\",\"coordinates\":[[[75.905,30.865],[75.920,30.865],[75.920,30.878],[75.905,30.878],[75.905,30.865]]]}"
+  }
+]
