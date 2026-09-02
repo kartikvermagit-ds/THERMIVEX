@@ -35,8 +35,9 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
   const [basemapMode, setBasemapMode] = useState<'satellite' | 'dark'>('satellite');
   const [cursorCoords, setCursorCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const lastMouseMoveRef = useRef<number>(0);
 
-  // Initialize Map
+  // Initialize Map with High-Performance Zero-Lag Options
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
@@ -47,18 +48,31 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       minZoom: 4,
       maxZoom: 19,
       zoomControl: false,
-      attributionControl: false
+      attributionControl: false,
+      preferCanvas: true,            // GPU HTML5 2D Canvas rendering for zero-lag vector zooming
+      zoomAnimation: true,
+      zoomAnimationThreshold: 8,
+      fadeAnimation: true,
+      markerZoomAnimation: true,
+      wheelDebounceTime: 80,         // Prevents scroll wheel rapid-fire tile thrashing
+      wheelPxPerZoomLevel: 120       // Buttery smooth trackpad and mousewheel zoom steps
     });
 
-    // High-Resolution Satellite Photorealistic Basemap (Esri World Imagery)
+    // High-Resolution Satellite Photorealistic Basemap (Esri World Imagery) with performance buffering
     const satelliteTile = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 19,
+      updateWhenZooming: false,      // Do NOT recalculate tiles mid-animation
+      updateWhenIdle: true,         // Fetch only after zoom completes
+      keepBuffer: 6,                // Cache surrounding tiles to eliminate grey flash
       attribution: 'Esri, Maxar, Earthstar Geographics'
     });
 
     // High-Contrast Labels Layer for Borders & Cities
     const labelsTile = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 19,
+      updateWhenZooming: false,
+      updateWhenIdle: true,
+      keepBuffer: 6,
       opacity: 0.9
     });
 
@@ -72,12 +86,16 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    // Track Cursor Coordinates for Tactical HUD
+    // Throttled Cursor Coordinates HUD (100ms throttle to prevent React re-render lag during zoom)
     map.on('mousemove', (e: L.LeafletMouseEvent) => {
-      setCursorCoords({
-        lat: Number(e.latlng.lat.toFixed(4)),
-        lng: Number(e.latlng.lng.toFixed(4))
-      });
+      const now = Date.now();
+      if (now - lastMouseMoveRef.current > 100) {
+        lastMouseMoveRef.current = now;
+        setCursorCoords({
+          lat: Number(e.latlng.lat.toFixed(4)),
+          lng: Number(e.latlng.lng.toFixed(4))
+        });
+      }
     });
 
     const layerGroup = L.layerGroup().addTo(map);
@@ -104,11 +122,17 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
     if (basemapMode === 'satellite') {
       const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        maxZoom: 19
+        maxZoom: 19,
+        updateWhenZooming: false,
+        updateWhenIdle: true,
+        keepBuffer: 6
       }).addTo(map);
 
       const labels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 19,
+        updateWhenZooming: false,
+        updateWhenIdle: true,
+        keepBuffer: 6,
         opacity: 0.9
       }).addTo(map);
 
@@ -116,11 +140,17 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       labelsTilesRef.current = labels;
     } else {
       const dark = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-        maxZoom: 19
+        maxZoom: 19,
+        updateWhenZooming: false,
+        updateWhenIdle: true,
+        keepBuffer: 6
       }).addTo(map);
 
       const labels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 19,
+        updateWhenZooming: false,
+        updateWhenIdle: true,
+        keepBuffer: 6,
         opacity: 0.9
       }).addTo(map);
 
@@ -129,12 +159,12 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     }
   }, [basemapMode]);
 
-  // Handle Camera Fly-To target coordinates with dynamic zoom
+  // Handle Snappy Camera Fly-To target coordinates
   useEffect(() => {
     if (flyToCoords && mapInstanceRef.current) {
       mapInstanceRef.current.flyTo([flyToCoords[1], flyToCoords[0]], flyToZoom, {
-        duration: 1.4,
-        easeLinearity: 0.25
+        duration: 0.85,
+        easeLinearity: 0.4
       });
     }
   }, [flyToCoords, flyToZoom]);
