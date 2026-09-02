@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, RefreshCw, HelpCircle, Radio } from 'lucide-react';
+import { Flame, RefreshCw, HelpCircle, Radio, FileText, Download } from 'lucide-react';
 import type { DashboardStats, ScenarioItem } from '../types/incident';
+import { getSitRepMarkdownUrl, getGeoJsonExportUrl } from '../services/api';
 
 interface TopNavProps {
   stats: DashboardStats | null;
@@ -123,8 +124,57 @@ export const TopNav: React.FC<TopNavProps> = ({
         )}
       </div>
 
-      {/* Action Controls & Clock */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      {/* Action Controls & Export Links */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* SitRep Download Link */}
+        <a
+          href={getSitRepMarkdownUrl()}
+          download="THERMIVEX_National_SitRep.md"
+          title="Export 24-Hour Situation Report"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            backgroundColor: '#141A24',
+            border: '1px solid #232B3B',
+            color: '#94A3B8',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '11px',
+            fontWeight: 600,
+            textDecoration: 'none',
+            transition: 'all 0.1s ease'
+          }}
+        >
+          <FileText size={12} color="#38BDF8" />
+          <span>SitRep</span>
+        </a>
+
+        {/* GeoJSON Export Link */}
+        <a
+          href={getGeoJsonExportUrl()}
+          download="thermivex_incidents.geojson"
+          title="Export GeoJSON for QGIS / ArcGIS"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            backgroundColor: '#141A24',
+            border: '1px solid #232B3B',
+            color: '#94A3B8',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '11px',
+            fontWeight: 600,
+            textDecoration: 'none',
+            transition: 'all 0.1s ease'
+          }}
+        >
+          <Download size={12} color="#10B981" />
+          <span>GeoJSON</span>
+        </a>
+
+        {/* System Guide Modal Button */}
         <button
           onClick={onOpenGuide}
           style={{
@@ -141,17 +191,9 @@ export const TopNav: React.FC<TopNavProps> = ({
             cursor: 'pointer',
             transition: 'all 0.1s ease'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = '#FFF';
-            e.currentTarget.style.borderColor = '#38BDF8';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = '#94A3B8';
-            e.currentTarget.style.borderColor = '#232B3B';
-          }}
         >
           <HelpCircle size={12} />
-          <span>System Guide</span>
+          <span>Guide</span>
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>

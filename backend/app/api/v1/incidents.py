@@ -1,6 +1,6 @@
 import json
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
@@ -90,6 +90,17 @@ def get_incident_feed(
         "total_count": len(features),
         "features": features
     }
+
+@router.get("/export/geojson")
+def export_incidents_geojson(db: Session = Depends(get_db)):
+    """Exports active thermal incidents as an RFC 7946 compliant GeoJSON file for QGIS/ArcGIS Pro."""
+    feed = get_incident_feed(bbox=None, min_risk=0, severity=None, limit=500, db=db)
+    content = json.dumps(feed, indent=2)
+    return Response(
+        content=content,
+        media_type="application/geo+json",
+        headers={"Content-Disposition": "attachment; filename=thermivex_incidents.geojson"}
+    )
 
 @router.get("/{incident_id}/investigate")
 def get_incident_investigation_dossier(

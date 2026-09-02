@@ -1,10 +1,11 @@
 import io
+import datetime
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.db.models import IncidentEvent
+from app.db.models import IncidentEvent, AlertDispatch
 from app.services.ml_service import generate_shap_attributions
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
@@ -117,7 +118,100 @@ def get_dossier_pdf(incident_id: str, db: Session = Depends(get_db)):
             headers={"Content-Disposition": f"attachment; filename=Dossier_{inc.id}.pdf"}
         )
 
-    except Exception as e:
-        # Fallback text response if reportlab is not installed
+    except Exception:
         content = f"THERMIVEX EMERGENCY DOSSIER\nIncident: {inc.id}\nFacility: {inc.facility_name}\nRisk Score: {inc.risk_score}/100\nSeverity: {inc.severity_label}\nFRP: {inc.frp_total} MW\nCoordinates: {inc.latitude}, {inc.longitude}\n"
         return Response(content=content, media_type="text/plain")
+
+@router.get("/sitrep/summary")
+def get_sitrep_summary(db: Session = Depends(get_db)):
+    """
+    Returns an aggregated National Situational Report (SitRep) for disaster management command centers.
+    """
+    incidents = db.query(IncidentEvent).all()
+    dispatches = db.query(AlertDispatch).all()
+
+    critical_count = sum(1 for i in incidents if i.severity_label == "CRITICAL")
+    high_count = sum(1 for i in incidents if i.severity_label == "HIGH")
+    routine_count = sum(1 for i in incidents if i.classification == "PERSISTENT_OPERATIONAL_SOURCE")
+    total_frp = sum(i.frp_total for i in incidents)
+
+    top_incident = None
+    if incidents:
+        top_incident = max(incidents, key=lambda x: x.risk_score)
+
+    now_utc = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    return {
+        "title": "NATIONAL INDUSTRIAL THERMAL HAZARD SITUATIONAL REPORT (SITREP)",
+        "generated_at": now_utc,
+        "reporting_agency": "NDMA / THERMIVEX Spaceborne Early Warning Directorate",
+        "threat_level": "RED ADVISORY" if critical_count > 0 else "AMBER WATCH",
+        "macro_metrics": {
+            "total_active_clusters": len(incidents),
+            "critical_disasters": critical_count,
+            "high_risk_perimeters": high_count,
+            "routine_flaring_sources": routine_count,
+            "cumulative_radiative_flux_mw": round(total_frp, 1),
+            "total_emergency_dispatches": len(dispatches)
+        },
+        "highest_priority_target": {
+            "incident_id": top_incident.id if top_incident else None,
+            "facility_name": top_incident.facility_name if top_incident else None,
+            "risk_score": top_incident.risk_score if top_incident else 0,
+            "severity": top_incident.severity_label if top_incident else "NONE",
+            "frp_mw": top_incident.frp_total if top_incident else 0,
+            "location": f"{top_incident.latitude:.4f}° N, {top_incident.longitude:.4f}° E" if top_incident else None
+        },
+        "actionable_directives": [
+            "1. Priority mobilization of industrial foam tenders to Dahej PCPIR Sector 3.",
+            "2. Activate downwind air quality monitoring for VOCs and SO2 in East-Southeast corridor.",
+            "3. Continue automated satellite telemetry ingestion via NOAA-20 / Sentinel-2 SWIR."
+        ]
+    }
+
+@router.get("/sitrep/markdown")
+def get_sitrep_markdown(db: Session = Depends(get_db)):
+    """
+    Exports the SitRep formatted as a clean Markdown text document.
+    """
+    sitrep = get_sitrep_summary(db)
+    m = sitrep["macro_metrics"]
+    target = sitrep["highest_priority_target"]
+
+    md_text = f"""# {sitrep['title']}
+**Classification Level:** RESTRICTED // OPERATIONAL DISASTER INTELLIGENCE  
+**Generated At:** {sitrep['generated_at']}  
+**Reporting Agency:** {sitrep['reporting_agency']}  
+**National Threat Status:** **{sitrep['threat_level']}**  
+
+---
+
+## 1. Executive Situation Summary
+- **Active Hotspot Clusters Monitored:** {m['total_active_clusters']}
+- **Confirmed Critical Industrial Blazes:** {m['critical_disasters']}
+- **High-Risk Perimeter Anomalies:** {m['high_risk_perimeters']}
+- **Routine Operational Heat Sources (Suppressed):** {m['routine_flaring_sources']}
+- **Cumulative Radiative Energy Release:** {m['cumulative_radiative_flux_mw']} MW
+- **Disaster Dispatch Notices Issued:** {m['total_emergency_dispatches']}
+
+---
+
+## 2. Highest Priority Critical Target
+- **Incident Reference:** `#{target['incident_id']}`
+- **Facility Complex:** **{target['facility_name']}**
+- **Composite Risk Score:** **{target['risk_score']} / 100 ({target['severity']})**
+- **Radiative Power:** {target['frp_mw']} MW
+- **Geographic Coordinates:** {target['location']}
+
+---
+
+## 3. Mandatory Tactical Directives for District Emergency Officers
+{chr(10).join(sitrep['actionable_directives'])}
+
+*Document generated automatically by THERMIVEX Geospatial Early Warning Engine.*
+"""
+    return Response(
+        content=md_text,
+        media_type="text/markdown",
+        headers={"Content-Disposition": "attachment; filename=THERMIVEX_National_SitRep.md"}
+    )

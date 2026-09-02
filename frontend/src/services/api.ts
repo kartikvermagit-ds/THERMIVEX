@@ -63,3 +63,11 @@ export async function dispatchAlert(incidentId: string, recipient: string = "MID
 export function getDossierPdfUrl(incidentId: string): string {
   return `${API_BASE}/reports/dossier/${incidentId}/pdf`;
 }
+
+export function getSitRepMarkdownUrl(): string {
+  return `${API_BASE}/reports/sitrep/markdown`;
+}
+
+export function getGeoJsonExportUrl(): string {
+  return `${API_BASE}/incidents/export/geojson`;
+}
