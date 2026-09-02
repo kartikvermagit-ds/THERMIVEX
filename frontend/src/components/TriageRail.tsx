@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, Navigation, CheckCircle2 } from 'lucide-react';
+import { Search, Navigation, AlertTriangle, ShieldCheck, Flame, ChevronRight } from 'lucide-react';
 import type { IncidentFeature } from '../types/incident';
 
 interface TriageRailProps {
@@ -16,72 +16,122 @@ export const TriageRail: React.FC<TriageRailProps> = ({
   onLocateIncident
 }) => {
   const [filterSeverity, setFilterSeverity] = useState<string>('ALL');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const filteredIncidents = incidents.filter((inc) => {
-    if (filterSeverity === 'ALL') return true;
-    if (filterSeverity === 'CRITICAL') return inc.properties.severity === 'CRITICAL';
-    if (filterSeverity === 'HIGH') return inc.properties.severity === 'HIGH';
-    if (filterSeverity === 'ROUTINE') return inc.properties.classification === 'PERSISTENT_OPERATIONAL_SOURCE';
+  // Deduplicate by facility name + date/time so duplicate scenario triggers don't clutter the queue
+  const uniqueIncidents: IncidentFeature[] = [];
+  const seenKeys = new Set<string>();
+
+  for (const inc of incidents) {
+    const key = `${inc.properties.facility_name}_${inc.properties.acq_time}`;
+    if (!seenKeys.has(key)) {
+      seenKeys.add(key);
+      uniqueIncidents.push(inc);
+    }
+  }
+
+  const filteredIncidents = uniqueIncidents.filter((inc) => {
+    // Severity filter
+    if (filterSeverity === 'CRITICAL' && inc.properties.severity !== 'CRITICAL') return false;
+    if (filterSeverity === 'HIGH' && inc.properties.severity !== 'HIGH') return false;
+    if (filterSeverity === 'ROUTINE' && inc.properties.classification !== 'PERSISTENT_OPERATIONAL_SOURCE') return false;
+
+    // Search query filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const name = (inc.properties.facility_name || '').toLowerCase();
+      const id = inc.properties.id.toLowerCase();
+      const cls = inc.properties.classification.toLowerCase();
+      return name.includes(q) || id.includes(q) || cls.includes(q);
+    }
     return true;
   });
 
-  const getSeverityBadge = (sev: string, score: number) => {
-    if (sev === 'CRITICAL') {
-      return { bg: '#3B1218', border: '#EF4444', text: '#EF4444', label: `CRITICAL ${score}` };
-    }
-    if (sev === 'HIGH') {
-      return { bg: '#341D10', border: '#F97316', text: '#F97316', label: `HIGH ${score}` };
-    }
-    if (sev === 'MEDIUM') {
-      return { bg: '#2E220D', border: '#F59E0B', text: '#F59E0B', label: `MED ${score}` };
-    }
-    return { bg: '#181C30', border: '#818CF8', text: '#818CF8', label: `ROUTINE ${score}` };
-  };
-
   return (
     <aside style={{
-      width: '400px',
+      width: '380px',
       height: 'calc(100vh - 56px)',
-      backgroundColor: 'var(--bg-surface)',
-      borderRight: '1px solid var(--border-subtle)',
+      backgroundColor: '#0C1017',
+      borderRight: '1px solid #1E2633',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
       zIndex: 500
     }}>
-      {/* Header */}
-      <div style={{ padding: '16px', borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'rgba(7, 9, 14, 0.7)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <span style={{ fontSize: '13px', fontWeight: 800, letterSpacing: '0.04em', color: '#FFF' }}>
-            INCIDENT TRIAGE QUEUE ({filteredIncidents.length})
-          </span>
-          <span style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: 600 }}>
-            Ranked by Risk Score
+      {/* Search & Header Bar */}
+      <div style={{ padding: '14px 16px', borderBottom: '1px solid #1E2633', backgroundColor: '#090D14' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.06em', color: '#94A3B8' }}>
+              INCIDENT QUEUE
+            </span>
+            <span style={{
+              fontSize: '10px',
+              backgroundColor: '#1E2633',
+              color: '#CBD5E1',
+              padding: '1px 6px',
+              borderRadius: '10px',
+              fontWeight: 700
+            }}>
+              {filteredIncidents.length}
+            </span>
+          </div>
+
+          <span style={{ fontSize: '10px', color: '#64748B', fontFamily: 'monospace' }}>
+            NRT TELEMETRY
           </span>
         </div>
 
-        {/* Severity Filter Chips */}
-        <div style={{ display: 'flex', gap: '6px' }}>
+        {/* Tactical Search Field */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          backgroundColor: '#141A24',
+          border: '1px solid #232B3B',
+          borderRadius: '5px',
+          padding: '6px 10px',
+          marginBottom: '10px'
+        }}>
+          <Search size={13} color="#64748B" />
+          <input
+            type="text"
+            placeholder="Filter by facility, city, or ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#F1F5F9',
+              fontSize: '11px',
+              outline: 'none',
+              width: '100%'
+            }}
+          />
+        </div>
+
+        {/* Severity Filter Tabs */}
+        <div style={{ display: 'flex', gap: '4px' }}>
           {[
-            { id: 'ALL', label: 'All Events' },
-            { id: 'CRITICAL', label: 'Critical (Red)' },
-            { id: 'HIGH', label: 'High (Orange)' },
-            { id: 'ROUTINE', label: 'Routine (Purple)' }
+            { id: 'ALL', label: 'All' },
+            { id: 'CRITICAL', label: 'Critical' },
+            { id: 'HIGH', label: 'High' },
+            { id: 'ROUTINE', label: 'Routine' }
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setFilterSeverity(tab.id)}
               style={{
                 flex: 1,
-                padding: '6px 0',
-                fontSize: '11px',
+                padding: '5px 0',
+                fontSize: '10px',
                 fontWeight: 600,
-                borderRadius: '6px',
-                border: filterSeverity === tab.id ? '1px solid var(--accent-cyan)' : '1px solid var(--border-subtle)',
-                backgroundColor: filterSeverity === tab.id ? '#0F2937' : 'var(--bg-space)',
-                color: filterSeverity === tab.id ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                borderRadius: '4px',
+                border: filterSeverity === tab.id ? '1px solid #38BDF8' : '1px solid transparent',
+                backgroundColor: filterSeverity === tab.id ? '#0E2538' : '#141A24',
+                color: filterSeverity === tab.id ? '#38BDF8' : '#94A3B8',
                 cursor: 'pointer',
-                transition: 'all 0.15s ease'
+                transition: 'all 0.1s ease'
               }}
             >
               {tab.label}
@@ -90,160 +140,133 @@ export const TriageRail: React.FC<TriageRailProps> = ({
         </div>
       </div>
 
-      {/* Incident Cards List */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
+      {/* Incident List View */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
         {filteredIncidents.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
-            <CheckCircle2 size={36} color="var(--threat-safe)" style={{ margin: '0 auto 10px' }} />
-            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-              No incidents match the active filter.
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: '#64748B' }}>
+            <ShieldCheck size={32} color="#10B981" style={{ margin: '0 auto 8px', opacity: 0.8 }} />
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#94A3B8' }}>
+              All facilities operating within baseline.
+            </div>
+            <div style={{ fontSize: '10px', color: '#64748B', marginTop: '4px' }}>
+              Zero active alerts matching this filter.
             </div>
           </div>
         ) : (
           filteredIncidents.map((inc) => {
             const isSelected = selectedIncidentId === inc.properties.id;
-            const badge = getSeverityBadge(inc.properties.severity, inc.properties.risk_score);
             const isCritical = inc.properties.severity === 'CRITICAL';
+            const isHigh = inc.properties.severity === 'HIGH';
+            const isRoutine = inc.properties.classification === 'PERSISTENT_OPERATIONAL_SOURCE';
+
+            const stripeColor = isCritical ? '#EF4444' : isHigh ? '#F97316' : isRoutine ? '#818CF8' : '#EAB308';
 
             return (
               <div
                 key={inc.properties.id}
                 onClick={() => onSelectIncident(inc.properties.id)}
                 style={{
-                  backgroundColor: isSelected ? '#131B26' : 'var(--bg-space)',
-                  border: isSelected 
-                    ? '1.5px solid var(--accent-cyan)' 
-                    : isCritical 
-                      ? '1px solid #7F1D1D' 
-                      : '1px solid var(--border-subtle)',
-                  boxShadow: isSelected ? '0 0 16px rgba(6, 182, 212, 0.2)' : 'none',
-                  borderRadius: '8px',
-                  padding: '14px',
-                  marginBottom: '12px',
+                  backgroundColor: isSelected ? '#161F2E' : '#0F141C',
+                  border: isSelected ? '1px solid #0284C7' : '1px solid #1C2330',
+                  borderLeft: `3px solid ${stripeColor}`,
+                  borderRadius: '4px',
+                  padding: '11px 12px',
+                  marginBottom: '6px',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
+                  transition: 'background-color 0.12s ease',
                   position: 'relative'
                 }}
               >
-                {/* ID, Timestamp & Risk Badge */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span className="font-mono" style={{ fontSize: '12px', fontWeight: 800, color: '#FFF' }}>
-                      #{inc.properties.id}
+                {/* Row 1: Incident ID, Time & Severity Pill */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span className="font-mono" style={{ fontSize: '11px', fontWeight: 700, color: '#94A3B8' }}>
+                      {inc.properties.id}
                     </span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                      {inc.properties.acq_time} UTC
+                    <span style={{ fontSize: '10px', color: '#64748B' }}>
+                      • {inc.properties.acq_time} UTC
                     </span>
                   </div>
 
-                  <span style={{
-                    fontSize: '11px',
-                    fontWeight: 800,
-                    padding: '3px 8px',
-                    borderRadius: '4px',
-                    backgroundColor: badge.bg,
-                    border: `1px solid ${badge.border}`,
-                    color: badge.text,
-                    letterSpacing: '0.02em'
-                  }}>
-                    {badge.label}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      padding: '1px 6px',
+                      borderRadius: '3px',
+                      backgroundColor: isCritical ? '#2D1216' : isRoutine ? '#1A1B30' : '#2A1D0D',
+                      color: stripeColor,
+                      letterSpacing: '0.02em',
+                      fontFamily: 'monospace'
+                    }}>
+                      RISK {inc.properties.risk_score}
+                    </span>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onLocateIncident(inc.geometry.coordinates);
+                      }}
+                      title="Center Map"
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#64748B',
+                        padding: '2px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <Navigation size={11} />
+                    </button>
+                  </div>
                 </div>
 
-                {/* Facility Name */}
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#F8FAFC', marginBottom: '8px', lineHeight: 1.3 }}>
-                  {inc.properties.facility_name || 'Unidentified Facility'}
+                {/* Row 2: Facility Name */}
+                <div style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: isSelected ? '#FFF' : '#E2E8F0',
+                  marginBottom: '6px',
+                  lineHeight: 1.3
+                }}>
+                  {inc.properties.facility_name || 'Unidentified Compound'}
                 </div>
 
-                {/* Proximity & Classification Badges */}
-                <div style={{ display: 'flex', gap: '6px', fontSize: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                {/* Row 3: Tactical Classification & Proximity */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', marginBottom: '8px' }}>
                   <span style={{
-                    color: inc.properties.spatial_match_level === 'DIRECT_HIT' ? 'var(--threat-critical)' : 'var(--accent-cyan)',
-                    backgroundColor: '#0F1A24',
-                    border: '1px solid #1E293B',
-                    padding: '2px 7px',
-                    borderRadius: '4px',
-                    fontWeight: 700
+                    color: isCritical ? '#F87171' : isRoutine ? '#A5B4FC' : '#FBBF24',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    fontWeight: 500
                   }}>
-                    {inc.properties.spatial_match_level} ({inc.properties.dist_to_facility_m}m)
-                  </span>
-                  <span style={{
-                    color: inc.properties.classification === 'PERSISTENT_OPERATIONAL_SOURCE' ? 'var(--threat-routine)' : 'var(--text-secondary)',
-                    backgroundColor: '#161925',
-                    border: '1px solid #1E293B',
-                    padding: '2px 7px',
-                    borderRadius: '4px',
-                    fontWeight: 600
-                  }}>
+                    {isCritical ? <Flame size={10} /> : isRoutine ? <ShieldCheck size={10} /> : <AlertTriangle size={10} />}
                     {inc.properties.classification.replace(/_/g, ' ')}
                   </span>
+                  <span style={{ color: '#475569' }}>|</span>
+                  <span style={{ color: '#94A3B8' }}>
+                    {inc.properties.spatial_match_level === 'DIRECT_HIT' ? 'Core (0m)' : `${inc.properties.dist_to_facility_m}m offset`}
+                  </span>
                 </div>
 
-                {/* Telemetry Strip */}
+                {/* Row 4: Telemetry Metrics Strip */}
                 <div className="font-mono" style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  fontSize: '11px',
-                  color: 'var(--text-muted)',
-                  borderTop: '1px solid #1E293B',
-                  paddingTop: '8px',
-                  marginBottom: '10px'
+                  alignItems: 'center',
+                  fontSize: '10px',
+                  backgroundColor: '#090D14',
+                  padding: '4px 8px',
+                  borderRadius: '3px',
+                  color: '#64748B'
                 }}>
-                  <span>FRP: <strong style={{ color: '#FFF' }}>{inc.properties.frp_total} MW</strong></span>
-                  <span>ΔZ: <strong style={{ color: inc.properties.frp_delta_zscore > 3 ? 'var(--threat-critical)' : '#FFF' }}>+{inc.properties.frp_delta_zscore}σ</strong></span>
-                  <span>Pass: <strong style={{ color: 'var(--accent-cyan)' }}>{inc.properties.daynight === 'N' ? 'NIGHT' : 'DAY'}</strong></span>
-                </div>
-
-                {/* Action Controls */}
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectIncident(inc.properties.id);
-                    }}
-                    style={{
-                      flex: 1,
-                      padding: '7px 0',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      borderRadius: '5px',
-                      border: isSelected ? '1px solid var(--accent-cyan)' : '1px solid #1E293B',
-                      backgroundColor: isSelected ? 'var(--accent-cyan)' : '#0F2937',
-                      color: isSelected ? '#000' : '#FFF',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '5px',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <Eye size={13} />
-                    Investigate
-                  </button>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onLocateIncident(inc.geometry.coordinates);
-                    }}
-                    title="Center on Map"
-                    style={{
-                      padding: '7px 12px',
-                      fontSize: '11px',
-                      borderRadius: '5px',
-                      border: '1px solid var(--border-subtle)',
-                      backgroundColor: 'var(--bg-space)',
-                      color: 'var(--text-secondary)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <Navigation size={13} />
-                  </button>
+                  <span>FRP: <strong style={{ color: '#CBD5E1' }}>{inc.properties.frp_total} MW</strong></span>
+                  <span>ΔZ: <strong style={{ color: inc.properties.frp_delta_zscore > 3 ? '#F87171' : '#CBD5E1' }}>+{inc.properties.frp_delta_zscore}σ</strong></span>
+                  <span>Pass: <strong style={{ color: '#38BDF8' }}>{inc.properties.daynight === 'N' ? 'NIGHT' : 'DAY'}</strong></span>
+                  <ChevronRight size={12} color={isSelected ? '#38BDF8' : '#334155'} />
                 </div>
               </div>
             );

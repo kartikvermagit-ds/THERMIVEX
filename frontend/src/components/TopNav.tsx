@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, Satellite, RefreshCw, HelpCircle } from 'lucide-react';
+import { Flame, RefreshCw, HelpCircle, Radio } from 'lucide-react';
 import type { DashboardStats, ScenarioItem } from '../types/incident';
 
 interface TopNavProps {
@@ -33,99 +33,88 @@ export const TopNav: React.FC<TopNavProps> = ({
 
   return (
     <header style={{
-      height: '56px',
-      backgroundColor: 'var(--bg-surface)',
-      borderBottom: '1px solid var(--border-subtle)',
+      height: '52px',
+      backgroundColor: '#090D14',
+      borderBottom: '1px solid #1E2633',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '0 16px',
       zIndex: 1000
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {/* Brand & System Title */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div style={{
-          width: '32px',
-          height: '32px',
-          borderRadius: '6px',
-          backgroundColor: '#1E293B',
-          border: '1px solid var(--accent-cyan)',
+          width: '28px',
+          height: '28px',
+          borderRadius: '4px',
+          backgroundColor: '#161F2E',
+          border: '1px solid #0284C7',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center'
         }}>
-          <Flame size={18} color="var(--threat-critical)" />
+          <Flame size={15} color="#F87171" />
         </div>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontWeight: 700, fontSize: '14px', letterSpacing: '0.05em', color: '#FFF' }}>
-              THERMIVEX
-            </span>
-            <span style={{
-              fontSize: '10px',
-              padding: '1px 6px',
-              borderRadius: '4px',
-              backgroundColor: '#0F2937',
-              color: 'var(--accent-cyan)',
-              border: '1px solid var(--accent-cyan)',
-              fontWeight: 600
-            }}>
-              SIH 2026 TACTICAL
-            </span>
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            Industrial Fire & Persistent Thermal Source Intelligence
-          </div>
+
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+          <span style={{ fontWeight: 800, fontSize: '13px', letterSpacing: '0.08em', color: '#F8FAFC' }}>
+            THERMIVEX
+          </span>
+          <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 500 }}>
+            Geospatial Industrial Fire & Thermal Anomaly Platform
+          </span>
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      {/* Sensor Stream Telemetry & Triage Counts */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: '6px',
           fontSize: '11px',
-          color: 'var(--text-secondary)',
-          backgroundColor: 'var(--bg-space)',
-          padding: '4px 10px',
+          color: '#94A3B8',
+          backgroundColor: '#0F141C',
+          padding: '3px 8px',
           borderRadius: '4px',
-          border: '1px solid var(--border-subtle)'
+          border: '1px solid #1E2633'
         }}>
-          <Satellite size={14} color="var(--threat-safe)" />
-          <span>VIIRS/MODIS NRT:</span>
-          <span style={{ color: 'var(--threat-safe)', fontWeight: 600 }}>SYNCED</span>
+          <Radio size={12} color="#10B981" />
+          <span className="font-mono" style={{ fontSize: '10px' }}>VIIRS/MODIS NRT: CONNECTED</span>
         </div>
 
         {stats && (
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
             <div style={{
-              padding: '3px 8px',
-              borderRadius: '4px',
-              backgroundColor: '#271115',
-              border: '1px solid var(--threat-critical)',
+              padding: '2px 8px',
+              borderRadius: '3px',
+              backgroundColor: '#1C1215',
+              border: '1px solid #7F1D1D',
               fontSize: '11px',
-              color: 'var(--threat-critical)',
+              color: '#F87171',
               fontWeight: 600
             }}>
               CRITICAL: {stats.critical_disasters}
             </div>
             <div style={{
-              padding: '3px 8px',
-              borderRadius: '4px',
-              backgroundColor: '#1E1B4B',
-              border: '1px solid var(--threat-routine)',
+              padding: '2px 8px',
+              borderRadius: '3px',
+              backgroundColor: '#14142B',
+              border: '1px solid #3730A3',
               fontSize: '11px',
-              color: 'var(--threat-routine)',
+              color: '#A5B4FC',
               fontWeight: 600
             }}>
-              ROUTINE BASELINE: {stats.routine_flaring}
+              ROUTINE: {stats.routine_flaring}
             </div>
             <div style={{
-              padding: '3px 8px',
-              borderRadius: '4px',
-              backgroundColor: '#0F1F18',
-              border: '1px solid var(--threat-safe)',
+              padding: '2px 8px',
+              borderRadius: '3px',
+              backgroundColor: '#0F1A14',
+              border: '1px solid #065F46',
               fontSize: '11px',
-              color: 'var(--threat-safe)',
+              color: '#34D399',
               fontWeight: 600
             }}>
               SUPPRESSED: {stats.suppressed_false_positives}
@@ -134,40 +123,48 @@ export const TopNav: React.FC<TopNavProps> = ({
         )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* System Guide / Explainer Button */}
+      {/* Action Controls & Clock */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <button
           onClick={onOpenGuide}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '5px',
-            backgroundColor: '#0F2937',
-            border: '1px solid var(--accent-cyan)',
-            color: 'var(--accent-cyan)',
-            padding: '4px 10px',
+            backgroundColor: '#141A24',
+            border: '1px solid #232B3B',
+            color: '#94A3B8',
+            padding: '4px 9px',
             borderRadius: '4px',
             fontSize: '11px',
-            fontWeight: 700,
+            fontWeight: 600,
             cursor: 'pointer',
-            transition: 'all 0.15s ease'
+            transition: 'all 0.1s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#FFF';
+            e.currentTarget.style.borderColor = '#38BDF8';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '#94A3B8';
+            e.currentTarget.style.borderColor = '#232B3B';
           }}
         >
-          <HelpCircle size={13} />
+          <HelpCircle size={12} />
           <span>System Guide</span>
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>DEMO SCENARIO:</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
           <select 
             style={{
-              backgroundColor: 'var(--bg-space)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border-active)',
+              backgroundColor: '#141A24',
+              color: '#E2E8F0',
+              border: '1px solid #232B3B',
               padding: '4px 8px',
               borderRadius: '4px',
               fontSize: '11px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              outline: 'none'
             }}
             onChange={(e) => {
               if (e.target.value) {
@@ -177,10 +174,10 @@ export const TopNav: React.FC<TopNavProps> = ({
             }}
             disabled={isSimulating}
           >
-            <option value="">⚡ Trigger Demonstration Event...</option>
+            <option value="">⚡ Test Scenarios...</option>
             {scenarios.map((sc) => (
               <option key={sc.scenario_id} value={sc.scenario_id}>
-                {sc.title} ({sc.expected_risk_tier})
+                {sc.title}
               </option>
             ))}
           </select>
@@ -190,26 +187,26 @@ export const TopNav: React.FC<TopNavProps> = ({
           onClick={onRefresh}
           title="Refresh Feed"
           style={{
-            background: 'none',
-            border: '1px solid var(--border-subtle)',
-            color: 'var(--text-secondary)',
-            padding: '6px',
+            background: '#141A24',
+            border: '1px solid #232B3B',
+            color: '#94A3B8',
+            padding: '5px 7px',
             borderRadius: '4px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center'
           }}
         >
-          <RefreshCw size={14} />
+          <RefreshCw size={12} />
         </button>
 
         <div className="font-mono" style={{
           fontSize: '11px',
-          color: 'var(--accent-cyan)',
-          backgroundColor: 'var(--bg-space)',
+          color: '#38BDF8',
+          backgroundColor: '#0F141C',
           padding: '4px 8px',
           borderRadius: '4px',
-          border: '1px solid var(--border-subtle)'
+          border: '1px solid #1E2633'
         }}>
           {timeStr}
         </div>
