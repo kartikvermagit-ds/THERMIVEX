@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { Satellite, Moon, Crosshair } from 'lucide-react';
+import { Satellite, Moon, Crosshair, Compass } from 'lucide-react';
 import type { IncidentFeature, FacilityFeature } from '../types/incident';
 
 interface MapCanvasProps {
@@ -50,7 +50,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       attributionControl: false
     });
 
-    // High-Resolution Satellite Photorealistic Basemap (Esri World Imagery) - Clean & Watermark-Free
+    // High-Resolution Satellite Photorealistic Basemap (Esri World Imagery)
     const satelliteTile = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 19,
       attribution: 'Esri, Maxar, Earthstar Geographics'
@@ -67,6 +67,9 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     baseTilesRef.current = satelliteTile;
     labelsTilesRef.current = labelsTile;
 
+    // Tactical Metric Scale Bar (meters / kilometers)
+    L.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
+
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     // Track Cursor Coordinates for Tactical HUD
@@ -81,7 +84,6 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     layersGroupRef.current = layerGroup;
     mapInstanceRef.current = map;
 
-    // Trigger invalidateSize after initial render
     setTimeout(() => {
       map.invalidateSize();
     }, 200);
@@ -113,7 +115,6 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       baseTilesRef.current = sat;
       labelsTilesRef.current = labels;
     } else {
-      // Clean Dark Tactical Map (Esri Dark Canvas - 100% watermark free!)
       const dark = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 19
       }).addTo(map);
@@ -155,7 +156,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
             color: '#06B6D4',
             weight: 2,
             fillColor: '#06B6D4',
-            fillOpacity: 0.18,
+            fillOpacity: 0.16,
             dashArray: '5, 5'
           });
           poly.bindTooltip(`
@@ -209,7 +210,34 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       });
     }
 
-    // 4. Render Tactical Thermal Hotspot Markers
+    // 4. Render Geodesic Distance Vector Line for Selected Incident (if offset from plant)
+    const selectedInc = incidents.find(i => i.properties.id === selectedIncidentId);
+    if (selectedInc && selectedInc.properties.dist_to_facility_m > 0 && facilities) {
+      const matchedFac = facilities.find(f => f.properties.name === selectedInc.properties.facility_name);
+      if (matchedFac && matchedFac.geometry.type === 'Polygon') {
+        const ring = matchedFac.geometry.coordinates[0];
+        // Centroid of facility
+        const avgLon = ring.reduce((sum: number, p: [number, number]) => sum + p[0], 0) / ring.length;
+        const avgLat = ring.reduce((sum: number, p: [number, number]) => sum + p[1], 0) / ring.length;
+        const [incLon, incLat] = selectedInc.geometry.coordinates;
+
+        const offsetLine = L.polyline([[avgLat, avgLon], [incLat, incLon]], {
+          color: '#F59E0B',
+          weight: 2,
+          dashArray: '4, 6'
+        });
+
+        offsetLine.bindTooltip(`
+          <div style="font-family: monospace; font-size: 11px; padding: 2px; color: #F59E0B; background: #0B0E14;">
+            📏 Geodesic Offset: ${selectedInc.properties.dist_to_facility_m}m (Outside Industrial Perimeter)
+          </div>
+        `, { permanent: true, direction: 'center', className: 'offset-label' });
+
+        group.addLayer(offsetLine);
+      }
+    }
+
+    // 5. Render Tactical Thermal Hotspot Markers
     if (layersVisible.hotspots) {
       incidents.forEach((inc) => {
         const [lon, lat] = inc.geometry.coordinates;
@@ -331,12 +359,33 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         </button>
       </div>
 
+      {/* Tactical Compass & Cursor Coordinates HUD */}
+      <div style={{
+        position: 'absolute',
+        top: '70px',
+        right: '20px',
+        backgroundColor: 'rgba(15, 20, 28, 0.88)',
+        backdropFilter: 'blur(8px)',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: '6px',
+        padding: '6px 10px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        fontSize: '11px',
+        color: '#CBD5E1',
+        zIndex: 400
+      }}>
+        <Compass size={14} color="#38BDF8" />
+        <span style={{ fontWeight: 700, letterSpacing: '0.05em' }}>NORTH 000°</span>
+      </div>
+
       {/* Real-time Cursor Coordinates HUD */}
       {cursorCoords && (
         <div style={{
           position: 'absolute',
           bottom: '24px',
-          right: '70px',
+          right: '140px',
           backgroundColor: 'rgba(15, 20, 28, 0.88)',
           backdropFilter: 'blur(8px)',
           border: '1px solid var(--border-subtle)',
