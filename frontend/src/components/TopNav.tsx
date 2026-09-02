@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, RefreshCw, HelpCircle, Radio, FileText, Download, Map, Info } from 'lucide-react';
+import { Flame, RefreshCw, HelpCircle, Radio, FileText, Download, Map, Info, Bell, BellOff } from 'lucide-react';
 import type { DashboardStats, ScenarioItem } from '../types/incident';
 import { getSitRepMarkdownUrl, getGeoJsonExportUrl } from '../services/api';
 
@@ -12,6 +12,8 @@ interface TopNavProps {
   onRefresh: () => void;
   onOpenGuide: () => void;
   isSimulating: boolean;
+  soundEnabled: boolean;
+  onToggleSound: () => void;
 }
 
 export const TopNav: React.FC<TopNavProps> = ({
@@ -22,7 +24,9 @@ export const TopNav: React.FC<TopNavProps> = ({
   onTriggerScenario,
   onRefresh,
   onOpenGuide,
-  isSimulating
+  isSimulating,
+  soundEnabled,
+  onToggleSound
 }) => {
   const [timeStr, setTimeStr] = useState<string>('');
 
@@ -177,6 +181,27 @@ export const TopNav: React.FC<TopNavProps> = ({
 
       {/* Action Controls & Export Links */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* Audible Siren Alert Toggle */}
+        <button
+          onClick={onToggleSound}
+          title={soundEnabled ? 'Mute Tactical Siren Audio' : 'Enable Tactical Siren Audio'}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            backgroundColor: '#141A24',
+            border: soundEnabled ? '1px solid #38BDF8' : '1px solid #232B3B',
+            color: soundEnabled ? '#38BDF8' : '#64748B',
+            padding: '5px 8px',
+            borderRadius: '4px',
+            fontSize: '11px',
+            cursor: 'pointer',
+            transition: 'all 0.1s ease'
+          }}
+        >
+          {soundEnabled ? <Bell size={13} /> : <BellOff size={13} />}
+        </button>
+
         <a
           href={getSitRepMarkdownUrl()}
           download="THERMIVEX_National_SitRep.md"

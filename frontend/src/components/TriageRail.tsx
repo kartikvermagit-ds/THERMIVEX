@@ -110,20 +110,20 @@ export const TriageRail: React.FC<TriageRailProps> = ({
           />
         </div>
 
-        {/* Severity Filter Tabs */}
+        {/* Severity Filter Tabs with Dynamic Counters */}
         <div style={{ display: 'flex', gap: '4px' }}>
           {[
-            { id: 'ALL', label: 'All' },
-            { id: 'CRITICAL', label: 'Critical' },
-            { id: 'HIGH', label: 'High' },
-            { id: 'ROUTINE', label: 'Routine' }
+            { id: 'ALL', label: 'All', count: uniqueIncidents.length },
+            { id: 'CRITICAL', label: 'Critical', count: uniqueIncidents.filter(i => i.properties.severity === 'CRITICAL').length },
+            { id: 'HIGH', label: 'High', count: uniqueIncidents.filter(i => i.properties.severity === 'HIGH').length },
+            { id: 'ROUTINE', label: 'Routine', count: uniqueIncidents.filter(i => i.properties.classification === 'PERSISTENT_OPERATIONAL_SOURCE').length }
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setFilterSeverity(tab.id)}
               style={{
                 flex: 1,
-                padding: '5px 0',
+                padding: '5px 2px',
                 fontSize: '10px',
                 fontWeight: 600,
                 borderRadius: '4px',
@@ -131,10 +131,15 @@ export const TriageRail: React.FC<TriageRailProps> = ({
                 backgroundColor: filterSeverity === tab.id ? '#0E2538' : '#141A24',
                 color: filterSeverity === tab.id ? '#38BDF8' : '#94A3B8',
                 cursor: 'pointer',
-                transition: 'all 0.1s ease'
+                transition: 'all 0.1s ease',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '3px'
               }}
             >
-              {tab.label}
+              <span>{tab.label}</span>
+              <span style={{ fontSize: '9px', opacity: 0.75, fontFamily: 'monospace' }}>({tab.count})</span>
             </button>
           ))}
         </div>

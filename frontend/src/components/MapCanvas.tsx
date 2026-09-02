@@ -212,6 +212,28 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       });
     }
 
+    // 2b. Render 800m NFPA/ERG Emergency Blast Isolation Perimeter Circle for Critical Incidents
+    incidents.forEach((inc) => {
+      if (inc.properties.severity === 'CRITICAL') {
+        const [lon, lat] = inc.geometry.coordinates;
+        const blastCircle = L.circle([lat, lon], {
+          radius: 800,
+          color: '#F97316',
+          weight: 1.5,
+          dashArray: '5, 6',
+          fillColor: '#F97316',
+          fillOpacity: 0.05
+        });
+        blastCircle.bindTooltip(`
+          <div style="font-family: inherit; font-size: 11px; line-height: 1.3;">
+            <strong style="color: #F97316;">🚨 ERG Guide 128: 800m Isolation Radius</strong><br/>
+            <span style="color: #CBD5E1;">Immediate evacuation zone around volatile storage tanks</span>
+          </div>
+        `, { className: 'tactical-tooltip', sticky: true });
+        group.addLayer(blastCircle);
+      }
+    });
+
     // 3. Render 375m True Sensor Footprint Rectangles
     if (layersVisible.footprints) {
       incidents.forEach((inc) => {
