@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { Satellite, Moon } from 'lucide-react';
+import { Satellite, Moon, Crosshair } from 'lucide-react';
 import type { IncidentFeature, FacilityFeature } from '../types/incident';
 
 interface MapCanvasProps {
@@ -9,6 +9,7 @@ interface MapCanvasProps {
   selectedIncidentId: string | null;
   onSelectIncident: (id: string) => void;
   flyToCoords: [number, number] | null;
+  flyToZoom?: number;
   layersVisible: {
     hotspots: boolean;
     plumes: boolean;
@@ -23,6 +24,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   selectedIncidentId,
   onSelectIncident,
   flyToCoords,
+  flyToZoom = 15,
   layersVisible
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -32,29 +34,32 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   const labelsTilesRef = useRef<L.TileLayer | null>(null);
 
   const [basemapMode, setBasemapMode] = useState<'satellite' | 'dark'>('satellite');
+  const [cursorCoords, setCursorCoords] = useState<{ lat: number; lng: number } | null>(null);
 
-  // Initialize Map once
+  // Initialize Map
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    // Centered on India's Western/National industrial belt
+    // Centered specifically on India (Lat: 22.0, Lng: 77.5, Zoom: 5)
     const map = L.map(mapContainerRef.current, {
-      center: [22.2, 73.2],
-      zoom: 6,
+      center: [22.0, 77.5],
+      zoom: 5,
+      minZoom: 4,
+      maxZoom: 19,
       zoomControl: false,
       attributionControl: false
     });
 
-    // High-Resolution Satellite Photorealistic Basemap (Esri World Imagery) - No watermarks!
+    // High-Resolution Satellite Photorealistic Basemap (Esri World Imagery) - Clean & Watermark-Free
     const satelliteTile = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 19,
       attribution: 'Esri, Maxar, Earthstar Geographics'
     });
 
-    // Crisp Reference Labels Layer for roads, cities, and borders
+    // High-Contrast Labels Layer for Borders & Cities
     const labelsTile = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 19,
-      opacity: 0.85
+      opacity: 0.9
     });
 
     satelliteTile.addTo(map);
@@ -64,9 +69,22 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
+    // Track Cursor Coordinates for Tactical HUD
+    map.on('mousemove', (e: L.LeafletMouseEvent) => {
+      setCursorCoords({
+        lat: Number(e.latlng.lat.toFixed(4)),
+        lng: Number(e.latlng.lng.toFixed(4))
+      });
+    });
+
     const layerGroup = L.layerGroup().addTo(map);
     layersGroupRef.current = layerGroup;
     mapInstanceRef.current = map;
+
+    // Trigger invalidateSize after initial render
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
 
     return () => {
       map.remove();
@@ -89,7 +107,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
       const labels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 19,
-        opacity: 0.85
+        opacity: 0.9
       }).addTo(map);
 
       baseTilesRef.current = sat;
@@ -110,15 +128,15 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     }
   }, [basemapMode]);
 
-  // Handle camera fly-to target coordinates
+  // Handle Camera Fly-To target coordinates with dynamic zoom
   useEffect(() => {
     if (flyToCoords && mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([flyToCoords[1], flyToCoords[0]], 15, {
-        duration: 1.5,
+      mapInstanceRef.current.flyTo([flyToCoords[1], flyToCoords[0]], flyToZoom, {
+        duration: 1.4,
         easeLinearity: 0.25
       });
     }
-  }, [flyToCoords]);
+  }, [flyToCoords, flyToZoom]);
 
   // Render Vector Layers & Dynamic Markers
   useEffect(() => {
@@ -128,7 +146,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
     group.clearLayers();
 
-    // 1. Render OSM Industrial Facilities Layer (Glowing Cyan Polygons)
+    // 1. Render OSM Industrial Facilities Layer (Cyan Polygons)
     if (layersVisible.facilities && facilities) {
       facilities.forEach((fac) => {
         if (fac.geometry.type === 'Polygon') {
@@ -204,7 +222,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
           markerHtml = `
             <div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
               <div class="sonar-pulse" style="position: absolute; width: 32px; height: 32px; border-radius: 50%; background: rgba(239, 68, 68, 0.45); border: 2px solid #EF4444;"></div>
-              ${isSelected ? '<div style="position: absolute; width: 44px; height: 44px; border-radius: 50%; border: 2px dashed #00F0FF; animation: spin 4s linear infinite;"></div>' : ''}
+              ${isSelected ? '<div style="position: absolute; width: 44px; height: 44px; border-radius: 50%; border: 2px dashed #00F0FF;"></div>' : ''}
               <div style="width: 16px; height: 16px; transform: rotate(45deg); background: #FFF; border: 2px solid #EF4444; box-shadow: 0 0 16px #EF4444; z-index: 2;"></div>
             </div>
           `;
@@ -312,6 +330,34 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
           <span>Tactical Dark</span>
         </button>
       </div>
+
+      {/* Real-time Cursor Coordinates HUD */}
+      {cursorCoords && (
+        <div style={{
+          position: 'absolute',
+          bottom: '24px',
+          right: '70px',
+          backgroundColor: 'rgba(15, 20, 28, 0.88)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: '6px',
+          padding: '4px 10px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontSize: '10px',
+          color: 'var(--text-secondary)',
+          zIndex: 400,
+          boxShadow: '0 2px 10px rgba(0,0,0,0.5)'
+        }}>
+          <Crosshair size={12} color="var(--accent-cyan)" />
+          <span className="font-mono">
+            {cursorCoords.lat > 0 ? `${cursorCoords.lat}° N` : `${Math.abs(cursorCoords.lat)}° S`}, {' '}
+            {cursorCoords.lng > 0 ? `${cursorCoords.lng}° E` : `${Math.abs(cursorCoords.lng)}° W`}
+          </span>
+          <span style={{ color: 'var(--text-muted)' }}>| WGS84</span>
+        </div>
+      )}
     </div>
   );
 };
