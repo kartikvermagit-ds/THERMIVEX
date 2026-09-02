@@ -40,7 +40,7 @@ export const TriageRail: React.FC<TriageRailProps> = ({
 
   return (
     <aside style={{
-      width: '380px',
+      width: '400px',
       height: 'calc(100vh - 56px)',
       backgroundColor: 'var(--bg-surface)',
       borderRight: '1px solid var(--border-subtle)',
@@ -49,36 +49,39 @@ export const TriageRail: React.FC<TriageRailProps> = ({
       overflow: 'hidden',
       zIndex: 500
     }}>
-      <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-subtle)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--text-primary)' }}>
+      {/* Header */}
+      <div style={{ padding: '16px', borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'rgba(7, 9, 14, 0.7)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 800, letterSpacing: '0.04em', color: '#FFF' }}>
             INCIDENT TRIAGE QUEUE ({filteredIncidents.length})
           </span>
-          <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-            Sorted: Risk Score
+          <span style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: 600 }}>
+            Ranked by Risk Score
           </span>
         </div>
 
+        {/* Severity Filter Chips */}
         <div style={{ display: 'flex', gap: '6px' }}>
           {[
-            { id: 'ALL', label: 'All' },
-            { id: 'CRITICAL', label: 'Critical' },
-            { id: 'HIGH', label: 'High' },
-            { id: 'ROUTINE', label: 'Routine' }
+            { id: 'ALL', label: 'All Events' },
+            { id: 'CRITICAL', label: 'Critical (Red)' },
+            { id: 'HIGH', label: 'High (Orange)' },
+            { id: 'ROUTINE', label: 'Routine (Purple)' }
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setFilterSeverity(tab.id)}
               style={{
                 flex: 1,
-                padding: '4px 0',
+                padding: '6px 0',
                 fontSize: '11px',
                 fontWeight: 600,
-                borderRadius: '4px',
+                borderRadius: '6px',
                 border: filterSeverity === tab.id ? '1px solid var(--accent-cyan)' : '1px solid var(--border-subtle)',
                 backgroundColor: filterSeverity === tab.id ? '#0F2937' : 'var(--bg-space)',
                 color: filterSeverity === tab.id ? 'var(--accent-cyan)' : 'var(--text-secondary)',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
               }}
             >
               {tab.label}
@@ -87,11 +90,12 @@ export const TriageRail: React.FC<TriageRailProps> = ({
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
+      {/* Incident Cards List */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
         {filteredIncidents.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
-            <CheckCircle2 size={32} color="var(--threat-safe)" style={{ margin: '0 auto 8px' }} />
-            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+            <CheckCircle2 size={36} color="var(--threat-safe)" style={{ margin: '0 auto 10px' }} />
+            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>
               No incidents match the active filter.
             </div>
           </div>
@@ -106,81 +110,91 @@ export const TriageRail: React.FC<TriageRailProps> = ({
                 key={inc.properties.id}
                 onClick={() => onSelectIncident(inc.properties.id)}
                 style={{
-                  backgroundColor: isSelected ? 'var(--bg-surface-elevated)' : 'var(--bg-space)',
+                  backgroundColor: isSelected ? '#131B26' : 'var(--bg-space)',
                   border: isSelected 
-                    ? '1px solid var(--border-active)' 
+                    ? '1.5px solid var(--accent-cyan)' 
                     : isCritical 
                       ? '1px solid #7F1D1D' 
                       : '1px solid var(--border-subtle)',
-                  borderRadius: '6px',
-                  padding: '12px',
-                  marginBottom: '10px',
+                  boxShadow: isSelected ? '0 0 16px rgba(6, 182, 212, 0.2)' : 'none',
+                  borderRadius: '8px',
+                  padding: '14px',
+                  marginBottom: '12px',
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease',
+                  transition: 'all 0.2s ease',
                   position: 'relative'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span className="font-mono" style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                {/* ID, Timestamp & Risk Badge */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="font-mono" style={{ fontSize: '12px', fontWeight: 800, color: '#FFF' }}>
                       #{inc.properties.id}
                     </span>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                       {inc.properties.acq_time} UTC
                     </span>
                   </div>
 
                   <span style={{
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    padding: '2px 6px',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    padding: '3px 8px',
                     borderRadius: '4px',
                     backgroundColor: badge.bg,
                     border: `1px solid ${badge.border}`,
-                    color: badge.text
+                    color: badge.text,
+                    letterSpacing: '0.02em'
                   }}>
                     {badge.label}
                   </span>
                 </div>
 
-                <div style={{ fontSize: '12px', fontWeight: 600, color: '#FFF', marginBottom: '6px' }}>
+                {/* Facility Name */}
+                <div style={{ fontSize: '13px', fontWeight: 700, color: '#F8FAFC', marginBottom: '8px', lineHeight: 1.3 }}>
                   {inc.properties.facility_name || 'Unidentified Facility'}
                 </div>
 
-                <div style={{ display: 'flex', gap: '6px', fontSize: '10px', marginBottom: '8px' }}>
+                {/* Proximity & Classification Badges */}
+                <div style={{ display: 'flex', gap: '6px', fontSize: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
                   <span style={{
                     color: inc.properties.spatial_match_level === 'DIRECT_HIT' ? 'var(--threat-critical)' : 'var(--accent-cyan)',
                     backgroundColor: '#0F1A24',
-                    padding: '1px 5px',
-                    borderRadius: '3px',
-                    fontWeight: 600
+                    border: '1px solid #1E293B',
+                    padding: '2px 7px',
+                    borderRadius: '4px',
+                    fontWeight: 700
                   }}>
                     {inc.properties.spatial_match_level} ({inc.properties.dist_to_facility_m}m)
                   </span>
                   <span style={{
                     color: inc.properties.classification === 'PERSISTENT_OPERATIONAL_SOURCE' ? 'var(--threat-routine)' : 'var(--text-secondary)',
                     backgroundColor: '#161925',
-                    padding: '1px 5px',
-                    borderRadius: '3px'
+                    border: '1px solid #1E293B',
+                    padding: '2px 7px',
+                    borderRadius: '4px',
+                    fontWeight: 600
                   }}>
                     {inc.properties.classification.replace(/_/g, ' ')}
                   </span>
                 </div>
 
+                {/* Telemetry Strip */}
                 <div className="font-mono" style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  fontSize: '10px',
+                  fontSize: '11px',
                   color: 'var(--text-muted)',
                   borderTop: '1px solid #1E293B',
-                  paddingTop: '6px',
-                  marginBottom: '8px'
+                  paddingTop: '8px',
+                  marginBottom: '10px'
                 }}>
-                  <span>FRP: <strong style={{ color: 'var(--text-primary)' }}>{inc.properties.frp_total} MW</strong></span>
-                  <span>ΔZ: <strong style={{ color: inc.properties.frp_delta_zscore > 3 ? 'var(--threat-critical)' : 'var(--text-primary)' }}>+{inc.properties.frp_delta_zscore}σ</strong></span>
-                  <span>Pass: <strong style={{ color: 'var(--text-primary)' }}>{inc.properties.daynight === 'N' ? 'NIGHT' : 'DAY'}</strong></span>
+                  <span>FRP: <strong style={{ color: '#FFF' }}>{inc.properties.frp_total} MW</strong></span>
+                  <span>ΔZ: <strong style={{ color: inc.properties.frp_delta_zscore > 3 ? 'var(--threat-critical)' : '#FFF' }}>+{inc.properties.frp_delta_zscore}σ</strong></span>
+                  <span>Pass: <strong style={{ color: 'var(--accent-cyan)' }}>{inc.properties.daynight === 'N' ? 'NIGHT' : 'DAY'}</strong></span>
                 </div>
 
+                {/* Action Controls */}
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     onClick={(e) => {
@@ -189,21 +203,22 @@ export const TriageRail: React.FC<TriageRailProps> = ({
                     }}
                     style={{
                       flex: 1,
-                      padding: '5px 0',
+                      padding: '7px 0',
                       fontSize: '11px',
-                      fontWeight: 600,
-                      borderRadius: '4px',
-                      border: '1px solid var(--border-active)',
-                      backgroundColor: isSelected ? 'var(--border-active)' : '#0F2937',
-                      color: '#FFF',
+                      fontWeight: 700,
+                      borderRadius: '5px',
+                      border: isSelected ? '1px solid var(--accent-cyan)' : '1px solid #1E293B',
+                      backgroundColor: isSelected ? 'var(--accent-cyan)' : '#0F2937',
+                      color: isSelected ? '#000' : '#FFF',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '4px'
+                      gap: '5px',
+                      transition: 'all 0.15s ease'
                     }}
                   >
-                    <Eye size={12} />
+                    <Eye size={13} />
                     Investigate
                   </button>
 
@@ -212,21 +227,22 @@ export const TriageRail: React.FC<TriageRailProps> = ({
                       e.stopPropagation();
                       onLocateIncident(inc.geometry.coordinates);
                     }}
-                    title="Locate on Map"
+                    title="Center on Map"
                     style={{
-                      padding: '5px 10px',
+                      padding: '7px 12px',
                       fontSize: '11px',
-                      borderRadius: '4px',
+                      borderRadius: '5px',
                       border: '1px solid var(--border-subtle)',
                       backgroundColor: 'var(--bg-space)',
                       color: 'var(--text-secondary)',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      transition: 'all 0.15s ease'
                     }}
                   >
-                    <Navigation size={12} />
+                    <Navigation size={13} />
                   </button>
                 </div>
               </div>
