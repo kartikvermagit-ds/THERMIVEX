@@ -310,9 +310,8 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         const badgeBg = isCritical ? '#2D1216' : isRoutine ? '#1A1B30' : '#2A1D0D';
 
         marker.bindTooltip(`
-          <div style="font-family: inherit; font-size: 11px; line-height: 1.45;">
-            {/* Header: ID & Severity Pill */}
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 5px; border-bottom: 1px solid #1E2633; padding-bottom: 4px;">
+          <div style="font-family: inherit; font-size: 11px; line-height: 1.4; width: 250px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; border-bottom: 1px solid #1E2633; padding-bottom: 5px;">
               <span class="font-mono" style="font-weight: 800; color: #FFF; font-size: 12px;">
                 #${inc.properties.id}
               </span>
@@ -321,13 +320,11 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
               </span>
             </div>
 
-            {/* Facility Name */}
-            <div style="color: #F8FAFC; font-weight: 700; font-size: 12px; margin-bottom: 5px;">
+            <div style="color: #F8FAFC; font-weight: 700; font-size: 12px; margin-bottom: 6px; line-height: 1.3;">
               ${inc.properties.facility_name || 'Industrial Compound'}
             </div>
 
-            {/* Classification & Offset */}
-            <div style="display: flex; align-items: center; gap: 5px; font-size: 10px; margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 10px; margin-bottom: 8px;">
               <span style="color: ${badgeColor}; font-weight: 600;">
                 ● ${inc.properties.classification.replace(/_/g, ' ')}
               </span>
@@ -337,17 +334,15 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
               </span>
             </div>
 
-            {/* 2-Column Telemetry Box */}
-            <div class="font-mono" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; background-color: #05070B; padding: 6px 8px; border-radius: 4px; border: 1px solid #141A24; font-size: 10px; margin-bottom: 5px;">
+            <div class="font-mono" style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px 8px; background-color: #05070B; padding: 6px 8px; border-radius: 3px; border: 1px solid #141A24; font-size: 10px; margin-bottom: 6px;">
               <div>FRP: <strong style="color: #FFF;">${inc.properties.frp_total} MW</strong></div>
               <div>Anomaly: <strong style="color: ${inc.properties.frp_delta_zscore > 3 ? '#F87171' : '#FFF'};">+${inc.properties.frp_delta_zscore}σ</strong></div>
-              <div>Temp (T4): <strong style="color: #CBD5E1;">${inc.properties.bright_ti4_max} K</strong></div>
-              <div>Pass: <strong style="color: #38BDF8;">${inc.properties.satellite} (${inc.properties.daynight === 'N' ? 'Night' : 'Day'})</strong></div>
+              <div>Temp: <strong style="color: #CBD5E1;">${inc.properties.bright_ti4_max} K</strong></div>
+              <div>Pass: <strong style="color: #38BDF8;">${inc.properties.satellite}</strong></div>
             </div>
 
-            {/* Interactive hint */}
             <div style="color: #38BDF8; font-size: 9px; font-weight: 600; text-align: right;">
-              👉 Click to open forensic dossier
+              👉 Click marker to inspect dossier
             </div>
           </div>
         `, { 

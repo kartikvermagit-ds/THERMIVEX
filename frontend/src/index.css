@@ -92,17 +92,19 @@ body {
   justify-content: center;
 }
 
-/* Custom Dark Tactical Leaflet Tooltips */
+/* Custom Dark Tactical Leaflet Tooltips - Square Form */
 .leaflet-tooltip.tactical-tooltip {
-  background-color: rgba(10, 14, 20, 0.96) !important;
+  background-color: rgba(9, 13, 19, 0.97) !important;
   border: 1px solid #232E3E !important;
-  border-radius: 6px !important;
+  border-radius: 4px !important;
   color: #F1F5F9 !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
-  padding: 10px 12px !important;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.85) !important;
+  padding: 12px 14px !important;
   font-family: inherit !important;
-  backdrop-filter: blur(10px) !important;
-  max-width: 320px !important;
+  backdrop-filter: blur(12px) !important;
+  width: 280px !important;
+  max-width: 280px !important;
+  box-sizing: border-box !important;
   white-space: normal !important;
   pointer-events: none !important;
 }
