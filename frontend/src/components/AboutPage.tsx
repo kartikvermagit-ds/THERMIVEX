@@ -12,6 +12,7 @@ import {
   ArrowRight,
   Database
 } from 'lucide-react';
+import { ThermivexLogo } from './ThermivexLogo';
 
 interface AboutPageProps {
   onBackToMap: () => void;
@@ -69,8 +70,12 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onBackToMap }) => {
             </span>
           </div>
 
-          <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#FFF', marginBottom: '12px', letterSpacing: '-0.02em', lineHeight: 1.25 }}>
-            THERMIVEX: Spaceborne Industrial Fire & Thermal Intelligence Platform
+          <div style={{ marginBottom: '16px' }}>
+            <ThermivexLogo size={42} showSubtitle={false} />
+          </div>
+
+          <h1 style={{ fontSize: '26px', fontWeight: 800, color: '#FFF', marginBottom: '12px', letterSpacing: '-0.02em', lineHeight: 1.25 }}>
+            Spaceborne Industrial Fire & Thermal Intelligence Platform
           </h1>
 
           <p style={{ fontSize: '14px', color: '#94A3B8', lineHeight: 1.6, maxWidth: '850px', marginBottom: '24px' }}>

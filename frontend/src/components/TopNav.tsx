@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, RefreshCw, HelpCircle, Radio, FileText, Download, Map, Info, Bell, BellOff } from 'lucide-react';
+import { RefreshCw, HelpCircle, Radio, FileText, Download, Map, Info, Bell, BellOff } from 'lucide-react';
+import { ThermivexLogo } from './ThermivexLogo';
 import type { DashboardStats, ScenarioItem } from '../types/incident';
 import { getSitRepMarkdownUrl, getGeoJsonExportUrl } from '../services/api';
 
@@ -53,28 +54,8 @@ export const TopNav: React.FC<TopNavProps> = ({
     }}>
       {/* Brand & Navigation Tabs */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => onSelectTab('map')}>
-          <div style={{
-            width: '28px',
-            height: '28px',
-            borderRadius: '4px',
-            backgroundColor: '#161F2E',
-            border: '1px solid #0284C7',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <Flame size={15} color="#F87171" />
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-            <span style={{ fontWeight: 800, fontSize: '13px', letterSpacing: '0.08em', color: '#F8FAFC' }}>
-              THERMIVEX
-            </span>
-            <span style={{ fontSize: '10px', color: '#38BDF8', fontWeight: 700, backgroundColor: '#0F2937', padding: '1px 5px', borderRadius: '3px' }}>
-              SIH 2026
-            </span>
-          </div>
+        <div style={{ cursor: 'pointer' }} onClick={() => onSelectTab('map')}>
+          <ThermivexLogo size={32} showSubtitle={true} />
         </div>
 
         {/* View Switcher: Live Map vs About & Science */}
