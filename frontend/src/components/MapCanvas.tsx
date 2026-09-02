@@ -160,11 +160,19 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
             dashArray: '5, 5'
           });
           poly.bindTooltip(`
-            <div style="font-family: inherit; font-size: 11px; padding: 2px;">
-              <strong style="color: #06B6D4;">🏭 ${fac.properties.name}</strong><br/>
-              <span style="color: #94A3B8;">Type: ${fac.properties.industrial_type} | Hazard: Tier-${fac.properties.hazard_tier}</span>
+            <div style="font-family: inherit; font-size: 11px; line-height: 1.4;">
+              <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;">
+                <span style="font-size: 13px;">🏭</span>
+                <strong style="color: #38BDF8; font-size: 12px;">${fac.properties.name}</strong>
+              </div>
+              <div style="color: #CBD5E1; margin-bottom: 2px;">
+                Type: <strong>${fac.properties.industrial_type}</strong>
+              </div>
+              <div style="display: flex; gap: 6px; font-size: 10px; color: #94A3B8;">
+                <span>Hazard Classification: <strong style="color: #F87171;">Tier-${fac.properties.hazard_tier}</strong></span>
+              </div>
             </div>
-          `, { sticky: true });
+          `, { className: 'tactical-tooltip', sticky: true });
           group.addLayer(poly);
         }
       });
@@ -183,11 +191,22 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
             dashArray: '4, 4'
           });
           plumePoly.bindTooltip(`
-            <div style="font-family: monospace; font-size: 11px;">
-              <strong style="color: #EF4444;">⚠️ DOWNWIND TOXIC PLUME CONE</strong><br/>
-              Incident: #${inc.properties.id} | Trajectory: WNW -> ESE
+            <div style="font-family: inherit; font-size: 11px; line-height: 1.4;">
+              <div style="display: flex; align-items: center; gap: 5px; color: #F87171; font-weight: 800; margin-bottom: 4px;">
+                <span>⚠️</span>
+                <span>DOWNWIND TOXIC PLUME CONE</span>
+              </div>
+              <div style="color: #E2E8F0; margin-bottom: 2px;">
+                Target Incident: <strong>#${inc.properties.id}</strong>
+              </div>
+              <div style="color: #94A3B8; font-size: 10px;">
+                Trajectory: <strong>WNW ──► ESE</strong> (Bearing 115°)
+              </div>
+              <div style="color: #F87171; font-size: 10px; margin-top: 3px; font-weight: 600;">
+                Evacuation Threat Radius: 1,400 meters downwind
+              </div>
             </div>
-          `, { sticky: true });
+          `, { className: 'tactical-tooltip', sticky: true });
           group.addLayer(plumePoly);
         }
       });
@@ -205,6 +224,12 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
             fillOpacity: 0.08,
             dashArray: '3, 4'
           });
+          footprint.bindTooltip(`
+            <div style="font-family: inherit; font-size: 10px;">
+              <strong style="color: #E2E8F0;">VIIRS 375m Ground Pixel Footprint</strong><br/>
+              <span style="color: #94A3B8;">Spatial scan-track diamond oriented to satellite orbit</span>
+            </div>
+          `, { className: 'tactical-tooltip', sticky: true });
           group.addLayer(footprint);
         }
       });
@@ -228,10 +253,10 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         });
 
         offsetLine.bindTooltip(`
-          <div style="font-family: monospace; font-size: 11px; padding: 2px; color: #F59E0B; background: #0B0E14;">
+          <div style="font-family: monospace; font-size: 11px; color: #FBBF24;">
             📏 Geodesic Offset: ${selectedInc.properties.dist_to_facility_m}m (Outside Industrial Perimeter)
           </div>
-        `, { permanent: true, direction: 'center', className: 'offset-label' });
+        `, { className: 'tactical-tooltip', permanent: true, direction: 'center' });
 
         group.addLayer(offsetLine);
       }
@@ -243,6 +268,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         const [lon, lat] = inc.geometry.coordinates;
         const isSelected = selectedIncidentId === inc.properties.id;
         const isCritical = inc.properties.severity === 'CRITICAL';
+        const isHigh = inc.properties.severity === 'HIGH';
         const isRoutine = inc.properties.classification === 'PERSISTENT_OPERATIONAL_SOURCE';
 
         let markerHtml = '';
@@ -279,18 +305,57 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
         const marker = L.marker([lat, lon], { icon, zIndexOffset: isSelected ? 1000 : (isCritical ? 500 : 100) });
         marker.on('click', () => onSelectIncident(inc.properties.id));
+
+        const badgeColor = isCritical ? '#EF4444' : isHigh ? '#F97316' : isRoutine ? '#818CF8' : '#F59E0B';
+        const badgeBg = isCritical ? '#2D1216' : isRoutine ? '#1A1B30' : '#2A1D0D';
+
         marker.bindTooltip(`
-          <div style="font-family: inherit; font-size: 11px; line-height: 1.4; padding: 4px;">
-            <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 2px;">
-              <strong style="color: ${isCritical ? '#EF4444' : (isRoutine ? '#818CF8' : '#F59E0B')};">#${inc.properties.id}</strong>
-              <span style="font-weight: 700;">${inc.properties.risk_score}/100</span>
+          <div style="font-family: inherit; font-size: 11px; line-height: 1.45;">
+            {/* Header: ID & Severity Pill */}
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 5px; border-bottom: 1px solid #1E2633; padding-bottom: 4px;">
+              <span class="font-mono" style="font-weight: 800; color: #FFF; font-size: 12px;">
+                #${inc.properties.id}
+              </span>
+              <span style="background-color: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeColor}; font-weight: 800; font-size: 10px; padding: 1px 6px; border-radius: 3px; font-family: monospace;">
+                ${inc.properties.severity} ${inc.properties.risk_score}/100
+              </span>
             </div>
-            <div style="color: #F8FAFC; font-weight: 600;">${inc.properties.facility_name || 'Industrial Facility'}</div>
-            <div style="color: #94A3B8; font-family: monospace; font-size: 10px;">
-              FRP: ${inc.properties.frp_total} MW | ΔZ: +${inc.properties.frp_delta_zscore}σ | ${inc.properties.daynight === 'N' ? 'NIGHT' : 'DAY'}
+
+            {/* Facility Name */}
+            <div style="color: #F8FAFC; font-weight: 700; font-size: 12px; margin-bottom: 5px;">
+              ${inc.properties.facility_name || 'Industrial Compound'}
+            </div>
+
+            {/* Classification & Offset */}
+            <div style="display: flex; align-items: center; gap: 5px; font-size: 10px; margin-bottom: 6px;">
+              <span style="color: ${badgeColor}; font-weight: 600;">
+                ● ${inc.properties.classification.replace(/_/g, ' ')}
+              </span>
+              <span style="color: #475569;">|</span>
+              <span style="color: #94A3B8;">
+                ${inc.properties.spatial_match_level === 'DIRECT_HIT' ? 'Core (0m)' : `${inc.properties.dist_to_facility_m}m offset`}
+              </span>
+            </div>
+
+            {/* 2-Column Telemetry Box */}
+            <div class="font-mono" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; background-color: #05070B; padding: 6px 8px; border-radius: 4px; border: 1px solid #141A24; font-size: 10px; margin-bottom: 5px;">
+              <div>FRP: <strong style="color: #FFF;">${inc.properties.frp_total} MW</strong></div>
+              <div>Anomaly: <strong style="color: ${inc.properties.frp_delta_zscore > 3 ? '#F87171' : '#FFF'};">+${inc.properties.frp_delta_zscore}σ</strong></div>
+              <div>Temp (T4): <strong style="color: #CBD5E1;">${inc.properties.bright_ti4_max} K</strong></div>
+              <div>Pass: <strong style="color: #38BDF8;">${inc.properties.satellite} (${inc.properties.daynight === 'N' ? 'Night' : 'Day'})</strong></div>
+            </div>
+
+            {/* Interactive hint */}
+            <div style="color: #38BDF8; font-size: 9px; font-weight: 600; text-align: right;">
+              👉 Click to open forensic dossier
             </div>
           </div>
-        `, { sticky: true });
+        `, { 
+          className: 'tactical-tooltip', 
+          sticky: true,
+          direction: 'top',
+          offset: [0, -10]
+        });
 
         group.addLayer(marker);
       });

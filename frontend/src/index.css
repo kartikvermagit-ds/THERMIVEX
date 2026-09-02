@@ -91,3 +91,31 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+/* Custom Dark Tactical Leaflet Tooltips */
+.leaflet-tooltip.tactical-tooltip {
+  background-color: rgba(10, 14, 20, 0.96) !important;
+  border: 1px solid #232E3E !important;
+  border-radius: 6px !important;
+  color: #F1F5F9 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
+  padding: 10px 12px !important;
+  font-family: inherit !important;
+  backdrop-filter: blur(10px) !important;
+  max-width: 320px !important;
+  white-space: normal !important;
+  pointer-events: none !important;
+}
+
+.leaflet-tooltip-top.tactical-tooltip:before {
+  border-top-color: #232E3E !important;
+}
+.leaflet-tooltip-bottom.tactical-tooltip:before {
+  border-bottom-color: #232E3E !important;
+}
+.leaflet-tooltip-left.tactical-tooltip:before {
+  border-left-color: #232E3E !important;
+}
+.leaflet-tooltip-right.tactical-tooltip:before {
+  border-right-color: #232E3E !important;
+}
