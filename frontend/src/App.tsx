@@ -6,6 +6,8 @@ import { EvidenceDrawer } from './components/EvidenceDrawer';
 import { LayerControl } from './components/LayerControl';
 import { CorridorBar } from './components/CorridorBar';
 import { TimelineScrubber } from './components/TimelineScrubber';
+import { MapLegend } from './components/MapLegend';
+import { SystemGuideModal } from './components/SystemGuideModal';
 import type { 
   IncidentFeature, 
   FacilityFeature, 
@@ -34,6 +36,7 @@ export const App: React.FC = () => {
   const [flyToZoom, setFlyToZoom] = useState<number>(15);
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [selectedPassTime, setSelectedPassTime] = useState<string>('all');
+  const [isGuideOpen, setIsGuideOpen] = useState<boolean>(false);
 
   const [layersVisible, setLayersVisible] = useState({
     hotspots: true,
@@ -65,7 +68,6 @@ export const App: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Handle selecting an incident to investigate (Zooms directly to tactical scale)
   const handleSelectIncident = async (id: string) => {
     setSelectedIncidentId(id);
     try {
@@ -78,19 +80,16 @@ export const App: React.FC = () => {
     }
   };
 
-  // Handle locating an incident without opening drawer
   const handleLocateIncident = (coords: [number, number]) => {
     setFlyToZoom(14.5);
     setFlyToCoords(coords);
   };
 
-  // Quick jump to regional industrial corridors
   const handleFlyToCorridor = (coords: [number, number], zoom: number = 14) => {
     setFlyToZoom(zoom);
     setFlyToCoords(coords);
   };
 
-  // Trigger SIH demonstration scenario
   const handleTriggerScenario = async (scenarioId: string) => {
     setIsSimulating(true);
     try {
@@ -113,7 +112,6 @@ export const App: React.FC = () => {
     }));
   };
 
-  // Filter incidents if timeline scrubber is locked to a specific satellite overpass
   const displayIncidents = incidents.filter((inc) => {
     if (selectedPassTime === 'all') return true;
     return inc.properties.acq_time.startsWith(selectedPassTime.substring(0, 2));
@@ -127,6 +125,7 @@ export const App: React.FC = () => {
         scenarios={scenarios}
         onTriggerScenario={handleTriggerScenario}
         onRefresh={loadData}
+        onOpenGuide={() => setIsGuideOpen(true)}
         isSimulating={isSimulating}
       />
 
@@ -162,6 +161,9 @@ export const App: React.FC = () => {
             layersVisible={layersVisible}
           />
 
+          {/* Tactical Map Guide / Legend */}
+          <MapLegend />
+
           {/* Temporal Timeline Scrubber Bar */}
           <TimelineScrubber
             selectedPassTime={selectedPassTime}
@@ -180,6 +182,12 @@ export const App: React.FC = () => {
           />
         )}
       </div>
+
+      {/* How It Works / System Guide Modal */}
+      <SystemGuideModal
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
+      />
     </div>
   );
 };

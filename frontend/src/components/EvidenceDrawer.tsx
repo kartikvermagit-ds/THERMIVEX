@@ -8,7 +8,9 @@ import {
   BarChart3,
   Flame,
   Layers,
-  Activity
+  Activity,
+  ShieldCheck,
+  AlertTriangle
 } from 'lucide-react';
 import type { InvestigationDossier } from '../types/incident';
 import { dispatchAlert, getDossierPdfUrl } from '../services/api';
@@ -21,7 +23,7 @@ interface EvidenceDrawerProps {
 export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ dossier, onClose }) => {
   const [dispatchStatus, setDispatchStatus] = useState<string | null>(null);
   const [isDispatching, setIsDispatching] = useState<boolean>(false);
-  const [satelliteViewMode, setSatelliteViewMode] = useState<'swir' | 'rgb' | 'split'>('swir');
+  const [satelliteViewMode, setSatelliteViewMode] = useState<'swir' | 'rgb'>('swir');
 
   if (!dossier) return null;
 
@@ -29,10 +31,10 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ dossier, onClose
     setIsDispatching(true);
     try {
       await dispatchAlert(dossier.incident_id, "MIDC_EMERGENCY_DISPATCH_DESK");
-      setDispatchStatus("DISPATCHED TO LOCAL TENDERS");
+      setDispatchStatus("DISPATCH NOTICE TRANSMITTED TO LOCAL FOAM TENDERS");
       setTimeout(() => setDispatchStatus(null), 5000);
     } catch (err) {
-      setDispatchStatus("DISPATCH FAILED");
+      setDispatchStatus("DISPATCH TRANSMISSION FAILED");
     } finally {
       setIsDispatching(false);
     }
@@ -50,7 +52,7 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ dossier, onClose
       position: 'absolute',
       top: '56px',
       right: 0,
-      width: '480px',
+      width: '490px',
       height: 'calc(100vh - 56px)',
       backgroundColor: 'rgba(15, 20, 28, 0.96)',
       backdropFilter: 'blur(16px)',
@@ -68,7 +70,7 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ dossier, onClose
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: 'rgba(7, 9, 14, 0.8)'
+        backgroundColor: 'rgba(7, 9, 14, 0.85)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           {/* Circular Risk Gauge Meter */}
@@ -145,6 +147,41 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ dossier, onClose
       {/* Scrollable Forensic Body */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '18px' }}>
 
+        {/* SUMMARY AUDIT CARD (Why was this flagged?) */}
+        <div style={{
+          backgroundColor: isCritical ? '#211215' : (isRoutine ? '#14142B' : '#1F1B12'),
+          border: `1px solid ${isCritical ? '#7F1D1D' : (isRoutine ? '#3730A3' : '#78350F')}`,
+          borderRadius: '8px',
+          padding: '12px 14px',
+          marginBottom: '14px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 800, color: riskColor, letterSpacing: '0.04em', marginBottom: '6px' }}>
+            {isCritical ? <AlertTriangle size={14} /> : <ShieldCheck size={14} />}
+            <span>AUDIT VERIFICATION: WHY WAS THIS FLAGGED?</span>
+          </div>
+          <div style={{ fontSize: '11px', color: '#E2E8F0', lineHeight: 1.4 }}>
+            {isCritical && (
+              <>
+                <div>• <strong>Statistical Outlier:</strong> Anomaly surge of <strong>+{dossier.temporal_baseline.frp_delta_zscore}σ</strong> is unprecedented in 36 months of facility history.</div>
+                <div>• <strong>Direct Hit (0m):</strong> Sensor centroid is directly inside bulk chemical storage tanks.</div>
+                <div>• <strong>Confirmed Night Flaming:</strong> Thermal differential of +{dossier.sensor.temp_diff_kelvin} K confirms combustion; nighttime pass eliminates roof solar glint.</div>
+              </>
+            )}
+            {isRoutine && (
+              <>
+                <div>• <strong>Operational Baseline:</strong> High historical recurrence (94% of weeks active over past 3 years).</div>
+                <div>• <strong>Normal Range:</strong> Heat release matches registered flaring stack baseline; alert fatigue suppressed.</div>
+              </>
+            )}
+            {!isCritical && !isRoutine && (
+              <>
+                <div>• <strong>Peripheral Heat:</strong> Thermal activity detected outside industrial core boundary.</div>
+                <div>• <strong>Watchlist Status:</strong> Proximity monitoring enabled; no immediate breach of storage perimeter.</div>
+              </>
+            )}
+          </div>
+        </div>
+
         {/* 1. FACILITY IDENTITY & SPATIAL RELATIONSHIP */}
         <div style={{
           backgroundColor: 'var(--bg-space)',
@@ -180,7 +217,6 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ dossier, onClose
               <span>SPACEBORNE VERIFICATION (SENTINEL-2 L2A)</span>
             </div>
             
-            {/* View Mode Switcher */}
             <div style={{ display: 'flex', gap: '3px', backgroundColor: '#0B0E14', padding: '2px', borderRadius: '4px' }}>
               <button 
                 onClick={() => setSatelliteViewMode('swir')}
@@ -215,7 +251,6 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ dossier, onClose
             </div>
           </div>
 
-          {/* Photorealistic Simulated Satellite Tile Canvas */}
           <div style={{
             position: 'relative',
             height: '160px',
@@ -225,7 +260,6 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ dossier, onClose
             boxShadow: 'inset 0 0 20px rgba(0,0,0,0.8)'
           }}>
             {satelliteViewMode === 'swir' ? (
-              /* Sentinel-2 SWIR False Color (B12 - 2.19µm / B11 - 1.61µm / B4 - Red) */
               <div style={{
                 width: '100%',
                 height: '100%',
@@ -239,13 +273,11 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ dossier, onClose
                 justifyContent: 'space-between',
                 padding: '10px'
               }}>
-                {/* HUD Overlay Elements */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#FFF', textShadow: '0 1px 4px #000' }}>
                   <span className="font-mono">SENTINEL-2 MSI (20m SWIR)</span>
                   <span className="font-mono" style={{ color: '#FFD700' }}>B12-B11 COMPOSITE</span>
                 </div>
 
-                {/* Thermal Plume Smoke Vector Overlay */}
                 {isCritical && (
                   <div style={{
                     position: 'absolute',
@@ -276,7 +308,6 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ dossier, onClose
                 </div>
               </div>
             ) : (
-              /* Pre-Event Optical High-Resolution RGB Baseline */
               <div style={{
                 width: '100%',
                 height: '100%',
@@ -321,24 +352,28 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ dossier, onClose
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: 'var(--threat-high)', letterSpacing: '0.05em', marginBottom: '10px' }}>
             <Flame size={13} />
-            <span>2. RADIOMETRIC ENERGY & STATISTICAL SURGE</span>
+            <span>2. RADIOMETRIC SENSORS (WHAT THE NUMBERS MEAN)</span>
           </div>
           <div className="font-mono" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '11px' }}>
             <div style={{ backgroundColor: '#0B0E14', padding: '8px', borderRadius: '4px' }}>
-              <div style={{ color: 'var(--text-muted)', fontSize: '10px' }}>FIRE RADIATIVE POWER</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '10px' }}>FRP (FIRE POWER)</div>
               <strong style={{ fontSize: '14px', color: '#FFF' }}>{dossier.sensor.frp_mw} MW</strong>
+              <div style={{ fontSize: '9px', color: '#64748B', marginTop: '2px' }}>Rate of heat release</div>
             </div>
             <div style={{ backgroundColor: '#0B0E14', padding: '8px', borderRadius: '4px' }}>
-              <div style={{ color: 'var(--text-muted)', fontSize: '10px' }}>BRIGHTNESS TEMP (T4)</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '10px' }}>TEMPERATURE (T4)</div>
               <strong style={{ fontSize: '14px', color: '#FFF' }}>{dossier.sensor.t4_kelvin} K</strong>
+              <div style={{ fontSize: '9px', color: '#64748B', marginTop: '2px' }}>3.9µm Middle Infrared</div>
             </div>
             <div style={{ backgroundColor: '#0B0E14', padding: '8px', borderRadius: '4px' }}>
-              <div style={{ color: 'var(--text-muted)', fontSize: '10px' }}>THERMAL DIFF (T4-T5)</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '10px' }}>DIFF (T4 - T5)</div>
               <strong style={{ fontSize: '14px', color: '#FFF' }}>+{dossier.sensor.temp_diff_kelvin} K</strong>
+              <div style={{ fontSize: '9px', color: '#64748B', marginTop: '2px' }}>Flaming combustion vigor</div>
             </div>
             <div style={{ backgroundColor: '#0B0E14', padding: '8px', borderRadius: '4px' }}>
               <div style={{ color: 'var(--text-muted)', fontSize: '10px' }}>ANOMALY SURGE (ΔZ)</div>
               <strong style={{ fontSize: '14px', color: isCritical ? 'var(--threat-critical)' : '#FFF' }}>+{dossier.temporal_baseline.frp_delta_zscore}σ</strong>
+              <div style={{ fontSize: '9px', color: '#64748B', marginTop: '2px' }}>Sigma above 36mo mean</div>
             </div>
           </div>
         </div>

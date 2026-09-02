@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, Satellite, RefreshCw } from 'lucide-react';
+import { Flame, Satellite, RefreshCw, HelpCircle } from 'lucide-react';
 import type { DashboardStats, ScenarioItem } from '../types/incident';
 
 interface TopNavProps {
@@ -7,6 +7,7 @@ interface TopNavProps {
   scenarios: ScenarioItem[];
   onTriggerScenario: (scenarioId: string) => void;
   onRefresh: () => void;
+  onOpenGuide: () => void;
   isSimulating: boolean;
 }
 
@@ -15,6 +16,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   scenarios,
   onTriggerScenario,
   onRefresh,
+  onOpenGuide,
   isSimulating
 }) => {
   const [timeStr, setTimeStr] = useState<string>('');
@@ -133,6 +135,28 @@ export const TopNav: React.FC<TopNavProps> = ({
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* System Guide / Explainer Button */}
+        <button
+          onClick={onOpenGuide}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            backgroundColor: '#0F2937',
+            border: '1px solid var(--accent-cyan)',
+            color: 'var(--accent-cyan)',
+            padding: '4px 10px',
+            borderRadius: '4px',
+            fontSize: '11px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <HelpCircle size={13} />
+          <span>System Guide</span>
+        </button>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>DEMO SCENARIO:</span>
           <select 
