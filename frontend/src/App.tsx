@@ -8,6 +8,7 @@ import { CorridorBar } from './components/CorridorBar';
 import { TimelineScrubber } from './components/TimelineScrubber';
 import { MapLegend } from './components/MapLegend';
 import { SystemGuideModal } from './components/SystemGuideModal';
+import { AboutPage } from './components/AboutPage';
 import type { 
   IncidentFeature, 
   FacilityFeature, 
@@ -30,6 +31,7 @@ export const App: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [scenarios, setScenarios] = useState<ScenarioItem[]>([]);
   
+  const [currentTab, setCurrentTab] = useState<'map' | 'about'>('map');
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
   const [activeDossier, setActiveDossier] = useState<InvestigationDossier | null>(null);
   const [flyToCoords, setFlyToCoords] = useState<[number, number] | null>(null);
@@ -119,69 +121,75 @@ export const App: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden' }}>
-      {/* Top Mission Control Bar */}
+      {/* Top Mission Control Bar with Navigation Tabs */}
       <TopNav
         stats={stats}
         scenarios={scenarios}
+        currentTab={currentTab}
+        onSelectTab={setCurrentTab}
         onTriggerScenario={handleTriggerScenario}
         onRefresh={loadData}
         onOpenGuide={() => setIsGuideOpen(true)}
         isSimulating={isSimulating}
       />
 
-      {/* Main Workspace: Triage Rail + Map Canvas */}
-      <div style={{ display: 'flex', flex: 1, position: 'relative', overflow: 'hidden' }}>
-        <TriageRail
-          incidents={displayIncidents}
-          selectedIncidentId={selectedIncidentId}
-          onSelectIncident={handleSelectIncident}
-          onLocateIncident={handleLocateIncident}
-        />
-
-        <div style={{ flex: 1, position: 'relative', height: '100%' }}>
-          {/* Layer Control Pill Strip */}
-          <LayerControl
-            layers={layersVisible}
-            onToggleLayer={handleToggleLayer}
-          />
-
-          {/* Regional Corridor Quick-Jump Bar */}
-          <CorridorBar
-            onFlyTo={handleFlyToCorridor}
-          />
-
-          {/* Main Leaflet/Esri Map */}
-          <MapCanvas
+      {/* Main Content Area */}
+      {currentTab === 'about' ? (
+        <AboutPage onBackToMap={() => setCurrentTab('map')} />
+      ) : (
+        <div style={{ display: 'flex', flex: 1, position: 'relative', overflow: 'hidden' }}>
+          <TriageRail
             incidents={displayIncidents}
-            facilities={facilities}
             selectedIncidentId={selectedIncidentId}
             onSelectIncident={handleSelectIncident}
-            flyToCoords={flyToCoords}
-            flyToZoom={flyToZoom}
-            layersVisible={layersVisible}
+            onLocateIncident={handleLocateIncident}
           />
 
-          {/* Tactical Map Guide / Legend */}
-          <MapLegend />
+          <div style={{ flex: 1, position: 'relative', height: '100%' }}>
+            {/* Layer Control Pill Strip */}
+            <LayerControl
+              layers={layersVisible}
+              onToggleLayer={handleToggleLayer}
+            />
 
-          {/* Temporal Timeline Scrubber Bar */}
-          <TimelineScrubber
-            selectedPassTime={selectedPassTime}
-            onSelectPassTime={setSelectedPassTime}
-          />
+            {/* Regional Corridor Quick-Jump Bar */}
+            <CorridorBar
+              onFlyTo={handleFlyToCorridor}
+            />
+
+            {/* Main Leaflet/Esri Map */}
+            <MapCanvas
+              incidents={displayIncidents}
+              facilities={facilities}
+              selectedIncidentId={selectedIncidentId}
+              onSelectIncident={handleSelectIncident}
+              flyToCoords={flyToCoords}
+              flyToZoom={flyToZoom}
+              layersVisible={layersVisible}
+            />
+
+            {/* Tactical Map Guide / Legend */}
+            <MapLegend />
+
+            {/* Temporal Timeline Scrubber Bar */}
+            <TimelineScrubber
+              selectedPassTime={selectedPassTime}
+              onSelectPassTime={setSelectedPassTime}
+            />
+          </div>
+
+          {/* Slide-over Evidence Investigation Drawer */}
+          {activeDossier && (
+            <EvidenceDrawer
+              dossier={activeDossier}
+              onClose={() => {
+                setActiveDossier(null);
+                setSelectedIncidentId(null);
+              }}
+            />
+          )}
         </div>
-
-        {/* Slide-over Evidence Investigation Drawer */}
-        {activeDossier && (
-          <EvidenceDrawer
-            dossier={activeDossier}
-            onClose={() => {
-              setActiveDossier(null);
-              setSelectedIncidentId(null);
-            }}
-          />
-        )}
-      </div>
+      )}
 
       {/* How It Works / System Guide Modal */}
       <SystemGuideModal

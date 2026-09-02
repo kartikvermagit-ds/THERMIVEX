@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, RefreshCw, HelpCircle, Radio, FileText, Download } from 'lucide-react';
+import { Flame, RefreshCw, HelpCircle, Radio, FileText, Download, Map, Info } from 'lucide-react';
 import type { DashboardStats, ScenarioItem } from '../types/incident';
 import { getSitRepMarkdownUrl, getGeoJsonExportUrl } from '../services/api';
 
 interface TopNavProps {
   stats: DashboardStats | null;
   scenarios: ScenarioItem[];
+  currentTab: 'map' | 'about';
+  onSelectTab: (tab: 'map' | 'about') => void;
   onTriggerScenario: (scenarioId: string) => void;
   onRefresh: () => void;
   onOpenGuide: () => void;
@@ -15,6 +17,8 @@ interface TopNavProps {
 export const TopNav: React.FC<TopNavProps> = ({
   stats,
   scenarios,
+  currentTab,
+  onSelectTab,
   onTriggerScenario,
   onRefresh,
   onOpenGuide,
@@ -43,28 +47,75 @@ export const TopNav: React.FC<TopNavProps> = ({
       padding: '0 16px',
       zIndex: 1000
     }}>
-      {/* Brand & System Title */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{
-          width: '28px',
-          height: '28px',
-          borderRadius: '4px',
-          backgroundColor: '#161F2E',
-          border: '1px solid #0284C7',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <Flame size={15} color="#F87171" />
+      {/* Brand & Navigation Tabs */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => onSelectTab('map')}>
+          <div style={{
+            width: '28px',
+            height: '28px',
+            borderRadius: '4px',
+            backgroundColor: '#161F2E',
+            border: '1px solid #0284C7',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <Flame size={15} color="#F87171" />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+            <span style={{ fontWeight: 800, fontSize: '13px', letterSpacing: '0.08em', color: '#F8FAFC' }}>
+              THERMIVEX
+            </span>
+            <span style={{ fontSize: '10px', color: '#38BDF8', fontWeight: 700, backgroundColor: '#0F2937', padding: '1px 5px', borderRadius: '3px' }}>
+              SIH 2026
+            </span>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-          <span style={{ fontWeight: 800, fontSize: '13px', letterSpacing: '0.08em', color: '#F8FAFC' }}>
-            THERMIVEX
-          </span>
-          <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 500 }}>
-            Geospatial Industrial Fire & Thermal Anomaly Platform
-          </span>
+        {/* View Switcher: Live Map vs About & Science */}
+        <div style={{ display: 'flex', gap: '4px', backgroundColor: '#0F141C', padding: '3px', borderRadius: '5px', border: '1px solid #1E2633' }}>
+          <button
+            onClick={() => onSelectTab('map')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              padding: '4px 10px',
+              borderRadius: '4px',
+              border: 'none',
+              backgroundColor: currentTab === 'map' ? '#161F2E' : 'transparent',
+              color: currentTab === 'map' ? '#38BDF8' : '#94A3B8',
+              fontWeight: 700,
+              fontSize: '11px',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <Map size={12} />
+            <span>Tactical Map</span>
+          </button>
+
+          <button
+            onClick={() => onSelectTab('about')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              padding: '4px 10px',
+              borderRadius: '4px',
+              border: 'none',
+              backgroundColor: currentTab === 'about' ? '#161F2E' : 'transparent',
+              color: currentTab === 'about' ? '#38BDF8' : '#94A3B8',
+              fontWeight: 700,
+              fontSize: '11px',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <Info size={12} />
+            <span>About & Science</span>
+          </button>
         </div>
       </div>
 
@@ -82,7 +133,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           border: '1px solid #1E2633'
         }}>
           <Radio size={12} color="#10B981" />
-          <span className="font-mono" style={{ fontSize: '10px' }}>VIIRS/MODIS NRT: CONNECTED</span>
+          <span className="font-mono" style={{ fontSize: '10px' }}>VIIRS/MODIS: CONNECTED</span>
         </div>
 
         {stats && (
@@ -126,7 +177,6 @@ export const TopNav: React.FC<TopNavProps> = ({
 
       {/* Action Controls & Export Links */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {/* SitRep Download Link */}
         <a
           href={getSitRepMarkdownUrl()}
           download="THERMIVEX_National_SitRep.md"
@@ -150,7 +200,6 @@ export const TopNav: React.FC<TopNavProps> = ({
           <span>SitRep</span>
         </a>
 
-        {/* GeoJSON Export Link */}
         <a
           href={getGeoJsonExportUrl()}
           download="thermivex_incidents.geojson"
@@ -174,7 +223,6 @@ export const TopNav: React.FC<TopNavProps> = ({
           <span>GeoJSON</span>
         </a>
 
-        {/* System Guide Modal Button */}
         <button
           onClick={onOpenGuide}
           style={{
