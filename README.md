@@ -122,37 +122,32 @@ THERMIVEX/
 
 ---
 
-## 5. Quickstart Guide
+## 5. Quickstart Guide (Single Command)
 
-### Option A: One-Command Docker Deployment (Recommended)
+### The One-Command Launch (Backend + Frontend)
+
+From the project root:
+```bash
+npm install
+npm run dev
+```
+
+This single command automatically:
+1. Detects your Python environment (`py`, `python3`, or `python`)
+2. Launches the **FastAPI Geospatial Engine** at `http://localhost:8000` (API docs at `http://localhost:8000/docs`)
+3. Launches the **Mission-Control GIS Dashboard** at `http://localhost:5173`
+4. Automatically reloads both on any code edits
+
+---
+
+### Option B: Docker Deployment
 
 ```bash
-git clone https://github.com/kartikvermagit-ds/THERMIVEX.git
-cd THERMIVEX
 docker compose up --build
 ```
 * **Frontend Dashboard:** `http://localhost:3000`
 * **FastAPI Backend Swagger Docs:** `http://localhost:8000/docs`
 * **PostGIS Database:** `localhost:5432`
-
----
-
-### Option B: Local Development (Zero-Dependency SQLite Mode)
-
-#### 1. Start Backend:
-```bash
-cd backend
-py -m pip install -r requirements.txt
-py -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-#### 2. Start Frontend:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Open `http://localhost:5173` in your browser.
 
 ---
 
