@@ -61,6 +61,7 @@ export interface InvestigationDossier {
     spatial_match_level: string;
   };
   temporal_baseline: {
+    baseline_mean_mw?: number;
     persistence_index_52w: number;
     frp_delta_zscore: number;
     recurrence_classification: string;
@@ -80,6 +81,13 @@ export interface InvestigationDossier {
     threat_zone: string;
   };
   explainability_tree_shap: SHAPFactor[];
+  historical_30d_series?: { day: number; frp: number; is_current?: boolean }[];
+  nearby_infrastructure?: { icon: string; label: string; distance: string; note: string }[];
+  recommendation?: string;
+  why_flagged_audit?: {
+    overall_suspicion: string;
+    checkpoints: { label: string; status: boolean; detail: string }[];
+  };
 }
 
 export interface FacilityFeature {
