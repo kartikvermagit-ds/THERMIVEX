@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -284,7 +285,23 @@ def get_latest_clustering_run(db: Session = Depends(get_db)):
     """
     latest = db.query(ClusteringRun).order_by(desc(ClusteringRun.started_at)).first()
     if not latest:
-        return {"status": "NO_RUNS_RECORDED"}
+        return {
+            "status": "NO_RUNS_RECORDED",
+            "stale_after_minutes": settings.CLUSTER_RUN_STALE_MINUTES,
+            "run_age_seconds": None,
+            "is_stale": False
+        }
+
+    stale_after_minutes = max(1, int(settings.CLUSTER_RUN_STALE_MINUTES))
+    ref_time = latest.completed_at or latest.started_at
+    run_age_seconds = None
+    if ref_time:
+        now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+        run_age_seconds = max(0, int((now_utc - ref_time).total_seconds()))
+
+    is_stale = False
+    if run_age_seconds is not None:
+        is_stale = run_age_seconds > (stale_after_minutes * 60)
 
     return {
         "id": latest.id,
@@ -297,5 +314,8 @@ def get_latest_clustering_run(db: Session = Depends(get_db)):
         "events_updated": latest.events_updated,
         "started_at": latest.started_at.isoformat() if latest.started_at else None,
         "completed_at": latest.completed_at.isoformat() if latest.completed_at else None,
-        "status": latest.status
+        "status": latest.status,
+        "stale_after_minutes": stale_after_minutes,
+        "run_age_seconds": run_age_seconds,
+        "is_stale": is_stale
     }

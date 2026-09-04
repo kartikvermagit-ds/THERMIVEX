@@ -127,3 +127,20 @@ export interface EventClusterSummary {
   duration_seconds: number;
   status: string;
 }
+
+export interface LatestClusteringRun {
+  id?: string;
+  algorithm?: string;
+  algorithm_version?: string;
+  spatial_threshold_m?: number;
+  temporal_threshold_minutes?: number;
+  observations_considered?: number;
+  events_created?: number;
+  events_updated?: number;
+  started_at?: string | null;
+  completed_at?: string | null;
+  status: string;
+  stale_after_minutes: number;
+  run_age_seconds: number | null;
+  is_stale: boolean;
+}
