@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Float, Integer, DateTime, ForeignKey, Text, Boolean
+from sqlalchemy import Column, String, Float, Integer, DateTime, ForeignKey, Text, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 
@@ -99,3 +99,75 @@ class FirmsHotspot(Base):
     source_file = Column(String(255), nullable=True)
     raw_properties = Column(Text, nullable=True)                      # JSON string of raw sensor attributes
     ingested_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    event_links = relationship("EventObservationLink", back_populates="hotspot", cascade="all, delete-orphan")
+
+class ClusteringRun(Base):
+    __tablename__ = "clustering_runs"
+
+    id = Column(String(64), primary_key=True)
+    algorithm = Column(String(64), default="SPATIO_TEMPORAL_GRAPH", nullable=False)
+    algorithm_version = Column(String(32), default="STGRAPH-1.0", nullable=False)
+    spatial_threshold_m = Column(Float, default=750.0, nullable=False)
+    temporal_threshold_minutes = Column(Float, default=60.0, nullable=False)
+    observations_considered = Column(Integer, default=0, nullable=False)
+    events_created = Column(Integer, default=0, nullable=False)
+    events_updated = Column(Integer, default=0, nullable=False)
+    started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    completed_at = Column(DateTime, nullable=True)
+    status = Column(String(32), default="SUCCESS", nullable=False)
+
+    events = relationship("ThermalEvent", back_populates="clustering_run")
+
+class ThermalEvent(Base):
+    __tablename__ = "thermal_events"
+
+    id = Column(String(64), primary_key=True)
+    event_fingerprint = Column(String(64), unique=True, index=True, nullable=False)
+    title = Column(String(255), nullable=False)
+    first_observed_at = Column(DateTime, nullable=False, index=True)
+    last_observed_at = Column(DateTime, nullable=False, index=True)
+    duration_minutes = Column(Float, default=0.0)
+    centroid_latitude = Column(Float, nullable=False, index=True)
+    centroid_longitude = Column(Float, nullable=False, index=True)
+    peak_observation_id = Column(String(64), nullable=True)
+    peak_latitude = Column(Float, nullable=True)
+    peak_longitude = Column(Float, nullable=True)
+    convex_hull_geojson = Column(Text, nullable=True)
+    bounding_box_geojson = Column(Text, nullable=True)
+    spatial_extent_km2 = Column(Float, default=0.0)
+    observation_count = Column(Integer, default=1, index=True)
+    frp_total_mw = Column(Float, default=0.0, index=True)
+    frp_peak_mw = Column(Float, default=0.0)
+    frp_mean_mw = Column(Float, default=0.0)
+    frp_median_mw = Column(Float, default=0.0)
+    max_brightness_kelvin = Column(Float, default=0.0)
+    cluster_confidence = Column(Float, default=50.0) # Cluster Quality/Coherence (0-100), NOT fire confidence
+    cluster_quality = Column(Text, nullable=True)    # JSON metadata on compactness, coherence, multi-platform
+    status = Column(String(32), default="CANDIDATE", index=True) # CANDIDATE, ACTIVE, CLOSED, SUPPRESSED
+    is_demo = Column(Boolean, default=False, index=True)
+    clustering_algorithm_version = Column(String(32), default="STGRAPH-1.0")
+    clustering_run_id = Column(String(64), ForeignKey("clustering_runs.id"), nullable=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    clustering_run = relationship("ClusteringRun", back_populates="events")
+    observation_links = relationship("EventObservationLink", back_populates="event", cascade="all, delete-orphan")
+
+class EventObservationLink(Base):
+    __tablename__ = "event_observations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    event_id = Column(String(64), ForeignKey("thermal_events.id", ondelete="CASCADE"), nullable=False, index=True)
+    hotspot_id = Column(String(64), ForeignKey("firms_hotspots.id", ondelete="CASCADE"), nullable=False, index=True)
+    distance_to_centroid_m = Column(Float, default=0.0)
+    observed_at = Column(DateTime, nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    event = relationship("ThermalEvent", back_populates="observation_links")
+    hotspot = relationship("FirmsHotspot", back_populates="event_links")
+
+    __table_args__ = (
+        UniqueConstraint("event_id", "hotspot_id", name="uq_event_hotspot"),
+    )
+
