@@ -19,7 +19,7 @@ import type {
   InvestigationDossier 
 } from './types/incident';
 import type { ClimateUpdateItem, ClimateQuickStats } from './types/climate';
-import type { ThermalEvent, EventTimelineResponse } from './types/event';
+import type { ThermalEvent, EventTimelineResponse, LatestClusteringRun } from './types/event';
 import { 
   fetchIncidentFeed, 
   fetchFacilities, 
@@ -33,7 +33,8 @@ import {
   fetchThermalEvents, 
   fetchThermalEventDetail, 
   fetchEventTimeline, 
-  triggerEventClustering 
+  triggerEventClustering,
+  fetchLatestClusteringRun
 } from './services/eventsService';
 
 export const App: React.FC = () => {
@@ -53,6 +54,7 @@ export const App: React.FC = () => {
   const [eventTimeline, setEventTimeline] = useState<EventTimelineResponse | null>(null);
   const [isLoadingTimeline, setIsLoadingTimeline] = useState<boolean>(false);
   const [isClusteringLoading, setIsClusteringLoading] = useState<boolean>(false);
+  const [latestClusteringRun, setLatestClusteringRun] = useState<LatestClusteringRun | null>(null);
 
   const [flyToCoords, setFlyToCoords] = useState<[number, number] | null>(null);
   const [flyToZoom, setFlyToZoom] = useState<number>(15);
@@ -117,18 +119,25 @@ export const App: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [feedRes, facRes, statsRes, scenRes, eventsRes] = await Promise.all([
+      const [feedRes, facRes, statsRes, scenRes, eventsRes, latestRunRes] = await Promise.all([
         fetchIncidentFeed(0),
         fetchFacilities(),
         fetchDashboardStats(),
         fetchScenarios(),
-        fetchThermalEvents({ limit: 100 }).catch(() => ({ total_count: 0, events: [] }))
+        fetchThermalEvents({ limit: 100 }).catch(() => ({ total_count: 0, events: [] })),
+        fetchLatestClusteringRun().catch(() => ({
+          status: 'NO_RUNS_RECORDED',
+          stale_after_minutes: 30,
+          run_age_seconds: null,
+          is_stale: false
+        }))
       ]);
       setIncidents(feedRes.features);
       setFacilities(facRes.features);
       setStats(statsRes);
       setScenarios(scenRes);
       setThermalEvents(eventsRes.events || []);
+      setLatestClusteringRun(latestRunRes);
 
       // Load synthesized / real-time climate telemetry feed
       const climateRes = await fetchClimateFeed(feedRes.features, statsRes);
@@ -280,6 +289,7 @@ export const App: React.FC = () => {
             }}
             onTriggerClustering={handleTriggerClustering}
             isClusteringLoading={isClusteringLoading}
+            latestClusteringRun={latestClusteringRun}
           />
 
           <div style={{ flex: 1, position: 'relative', height: '100%' }}>

@@ -293,6 +293,12 @@ def test_backend_suite():
         assert latest_run["spatial_threshold_m"] == 750.0
         assert latest_run["temporal_threshold_minutes"] == 60.0
         assert latest_run["status"] == "SUCCESS"
+        assert "stale_after_minutes" in latest_run
+        assert "run_age_seconds" in latest_run
+        assert "is_stale" in latest_run
+        assert isinstance(latest_run["stale_after_minutes"], int)
+        assert isinstance(latest_run["is_stale"], bool)
+        assert latest_run["run_age_seconds"] is None or isinstance(latest_run["run_age_seconds"], int)
         print(f"PASS: GET /api/v1/events/runs/latest (Run: {latest_run['id']}, Algorithm: {latest_run['algorithm_version']})")
 
         # 25. Database Integrity: Verify existing facilities, incidents, and FIRMS records remain 100% intact

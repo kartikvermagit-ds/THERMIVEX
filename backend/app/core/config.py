@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     DATA_DIR: str = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
     ENABLE_DEMO_DATA: bool = os.getenv("ENABLE_DEMO_DATA", "true").lower() in ("true", "1", "yes")
     MAX_UPLOAD_SIZE_BYTES: int = 10 * 1024 * 1024  # 10 MB limit
+    CLUSTER_RUN_STALE_MINUTES: int = int(os.getenv("CLUSTER_RUN_STALE_MINUTES", "30"))
 
     model_config = SettingsConfigDict(case_sensitive=True)
 

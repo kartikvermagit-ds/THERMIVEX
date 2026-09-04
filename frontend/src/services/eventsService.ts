@@ -4,7 +4,8 @@ import type {
   ThermalEventGeoJSONCollection,
   EventTimelineResponse,
   EventClusterRequest,
-  EventClusterSummary
+  EventClusterSummary,
+  LatestClusteringRun
 } from '../types/event';
 import type { FirmsHotspotObservation } from '../types/firms';
 
@@ -129,7 +130,7 @@ export async function fetchEventObservations(eventId: string): Promise<FirmsHots
 /**
  * Fetches metadata for the latest clustering run execution.
  */
-export async function fetchLatestClusteringRun(): Promise<any> {
+export async function fetchLatestClusteringRun(): Promise<LatestClusteringRun> {
   const res = await fetch(`${API_BASE}/events/runs/latest`);
   if (!res.ok) {
     throw new Error(`Failed to fetch latest clustering run: ${res.statusText}`);

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Navigation, AlertTriangle, ShieldCheck, Flame, ChevronRight, Sparkles, RefreshCw } from 'lucide-react';
 import type { IncidentFeature } from '../types/incident';
-import type { ThermalEvent } from '../types/event';
+import type { ThermalEvent, LatestClusteringRun } from '../types/event';
 
 interface TriageRailProps {
   incidents: IncidentFeature[];
@@ -14,6 +14,7 @@ interface TriageRailProps {
   onLocateThermalEvent?: (coords: [number, number]) => void;
   onTriggerClustering?: () => void;
   isClusteringLoading?: boolean;
+  latestClusteringRun?: LatestClusteringRun | null;
 }
 
 export const TriageRail: React.FC<TriageRailProps> = ({
@@ -26,7 +27,8 @@ export const TriageRail: React.FC<TriageRailProps> = ({
   onLocateIncident,
   onLocateThermalEvent,
   onTriggerClustering,
-  isClusteringLoading = false
+  isClusteringLoading = false,
+  latestClusteringRun = null
 }) => {
   const [activeTab, setActiveTab] = useState<'incidents' | 'events'>('incidents');
   const [filterSeverity, setFilterSeverity] = useState<string>('ALL');
@@ -264,28 +266,60 @@ export const TriageRail: React.FC<TriageRailProps> = ({
             </div>
 
             {onTriggerClustering && (
-              <button
-                onClick={onTriggerClustering}
-                disabled={isClusteringLoading}
-                style={{
-                  width: '100%',
-                  padding: '6px 8px',
-                  borderRadius: '4px',
-                  border: '1px solid #F59E0B',
-                  backgroundColor: isClusteringLoading ? '#1A140B' : 'rgba(245, 158, 11, 0.12)',
-                  color: '#F59E0B',
-                  fontSize: '10px',
-                  fontWeight: 700,
-                  cursor: isClusteringLoading ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px'
-                }}
-              >
-                <RefreshCw size={11} className={isClusteringLoading ? 'spin' : ''} />
-                <span>{isClusteringLoading ? 'Running Graph Clustering...' : 'Run Spatio-Temporal Clustering (750m/60m)'}</span>
-              </button>
+              <>
+                <button
+                  onClick={onTriggerClustering}
+                  disabled={isClusteringLoading}
+                  style={{
+                    width: '100%',
+                    padding: '6px 8px',
+                    borderRadius: '4px',
+                    border: '1px solid #F59E0B',
+                    backgroundColor: isClusteringLoading ? '#1A140B' : 'rgba(245, 158, 11, 0.12)',
+                    color: '#F59E0B',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    cursor: isClusteringLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <RefreshCw size={11} className={isClusteringLoading ? 'spin' : ''} />
+                  <span>{isClusteringLoading ? 'Running Graph Clustering...' : 'Run Spatio-Temporal Clustering (750m/60m)'}</span>
+                </button>
+
+                {latestClusteringRun && (
+                  <div
+                    style={{
+                      marginTop: '8px',
+                      padding: '6px 8px',
+                      borderRadius: '4px',
+                      border: `1px solid ${latestClusteringRun.is_stale ? '#7F1D1D' : '#1E3A2D'}`,
+                      backgroundColor: latestClusteringRun.is_stale ? '#1C1215' : '#0F1A14',
+                      fontSize: '10px',
+                      color: '#94A3B8'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                      <span style={{ color: '#CBD5E1', fontWeight: 700 }}>Latest Run</span>
+                      <span style={{ color: latestClusteringRun.is_stale ? '#F87171' : '#34D399', fontWeight: 700 }}>
+                        {latestClusteringRun.is_stale ? 'STALE' : 'FRESH'}
+                      </span>
+                    </div>
+                    <div>Status: <strong>{latestClusteringRun.status}</strong></div>
+                    {latestClusteringRun.run_age_seconds !== null && (
+                      <div>Age: <strong>{Math.floor(latestClusteringRun.run_age_seconds / 60)}m</strong></div>
+                    )}
+                    {(latestClusteringRun.events_created !== undefined || latestClusteringRun.events_updated !== undefined) && (
+                      <div>
+                        Δ Events: +{latestClusteringRun.events_created ?? 0} / ↻ {latestClusteringRun.events_updated ?? 0}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
