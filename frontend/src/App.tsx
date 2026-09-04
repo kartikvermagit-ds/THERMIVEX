@@ -9,6 +9,7 @@ import { TimelineScrubber } from './components/TimelineScrubber';
 import { MapLegend } from './components/MapLegend';
 import { SystemGuideModal } from './components/SystemGuideModal';
 import { AboutPage } from './components/AboutPage';
+import { ClimateSlideStrip } from './components/ClimateSlideStrip';
 import type { 
   IncidentFeature, 
   FacilityFeature, 
@@ -16,6 +17,7 @@ import type {
   DashboardStats, 
   InvestigationDossier 
 } from './types/incident';
+import type { ClimateUpdateItem, ClimateQuickStats } from './types/climate';
 import { 
   fetchIncidentFeed, 
   fetchFacilities, 
@@ -24,6 +26,7 @@ import {
   fetchInvestigationDossier,
   simulateScenario 
 } from './services/api';
+import { fetchClimateFeed, DEFAULT_CLIMATE_UPDATES } from './services/climateService';
 
 export const App: React.FC = () => {
   const [incidents, setIncidents] = useState<IncidentFeature[]>([]);
@@ -40,6 +43,16 @@ export const App: React.FC = () => {
   const [selectedPassTime, setSelectedPassTime] = useState<string>('all');
   const [isGuideOpen, setIsGuideOpen] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [climateUpdates, setClimateUpdates] = useState<ClimateUpdateItem[]>(DEFAULT_CLIMATE_UPDATES);
+  const [climateQuickStats, setClimateQuickStats] = useState<ClimateQuickStats>({
+    windSpeedKmh: 16.4,
+    windBearing: 'NW (315°)',
+    totalEstCo2eFluxTph: 41.8,
+    ch4RegionalPpb: 1918,
+    maxFRPAnomalyMw: 24.5,
+    activePlumesCount: 3,
+    glintSuppressionPct: 100
+  });
 
   const [layersVisible, setLayersVisible] = useState({
     hotspots: true,
@@ -95,6 +108,11 @@ export const App: React.FC = () => {
       setFacilities(facRes.features);
       setStats(statsRes);
       setScenarios(scenRes);
+
+      // Load synthesized / real-time climate telemetry feed
+      const climateRes = await fetchClimateFeed(feedRes.features, statsRes);
+      setClimateUpdates(climateRes.updates);
+      setClimateQuickStats(climateRes.quickStats);
     } catch (err) {
       console.error('Failed to load initial data:', err);
     }
@@ -214,6 +232,13 @@ export const App: React.FC = () => {
             <TimelineScrubber
               selectedPassTime={selectedPassTime}
               onSelectPassTime={setSelectedPassTime}
+            />
+
+            {/* Real-Time Climate & Atmospheric Intelligence Slide Strip */}
+            <ClimateSlideStrip
+              updates={climateUpdates}
+              quickStats={climateQuickStats}
+              onFlyToCorridor={handleFlyToCorridor}
             />
           </div>
 

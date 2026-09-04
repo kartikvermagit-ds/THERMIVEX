@@ -50,7 +50,7 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
   return (
     <div style={{
       position: 'absolute',
-      bottom: '18px',
+      bottom: '56px',
       left: '50%',
       transform: 'translateX(-50%)',
       backgroundColor: 'rgba(15, 20, 28, 0.94)',

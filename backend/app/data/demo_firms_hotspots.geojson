@@ -1,0 +1,99 @@
+{
+  "type": "FeatureCollection",
+  "description": "Synthetic demo thermal anomaly records placed near representative Indian industrial locations for pipeline and UI testing only.",
+  "note": "SIH26162 THERMIVEX - DO NOT TREAT AS REAL NASA OBSERVATIONS. GROUND VERIFICATION REQUIRED.",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [72.5831, 21.6842]
+      },
+      "properties": {
+        "latitude": 21.6842,
+        "longitude": 72.5831,
+        "acquisition_date": "2026-03-15",
+        "acquisition_time": "2134",
+        "satellite": "NOAA-20",
+        "instrument": "VIIRS",
+        "confidence": "high",
+        "brightness_temperature": 384.6,
+        "bright_ti5_or_t31": 292.0,
+        "frp": 86.4,
+        "day_night": "N",
+        "source": "DEMO_DATA",
+        "is_demo": true,
+        "description": "Synthetic thermal anomaly near Dahej petrochemical corridor. Ground verification required."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [69.8324, 22.3412]
+      },
+      "properties": {
+        "latitude": 22.3412,
+        "longitude": 69.8324,
+        "acquisition_date": "2026-03-15",
+        "acquisition_time": "2130",
+        "satellite": "NOAA-20",
+        "instrument": "VIIRS",
+        "confidence": "nominal",
+        "brightness_temperature": 352.4,
+        "bright_ti5_or_t31": 298.2,
+        "frp": 21.8,
+        "day_night": "N",
+        "source": "DEMO_DATA",
+        "is_demo": true,
+        "description": "Synthetic persistent thermal source near Jamnagar refinery zone. Ground verification required."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [76.9248, 28.3614]
+      },
+      "properties": {
+        "latitude": 28.3614,
+        "longitude": 76.9248,
+        "acquisition_date": "2026-03-15",
+        "acquisition_time": "1940",
+        "satellite": "Suomi-NPP",
+        "instrument": "VIIRS",
+        "confidence": "nominal",
+        "brightness_temperature": 361.2,
+        "bright_ti5_or_t31": 295.8,
+        "frp": 44.0,
+        "day_night": "N",
+        "source": "DEMO_DATA",
+        "is_demo": true,
+        "description": "Synthetic thermal anomaly observation near Manesar industrial corridor. Ground verification required."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [72.8941, 19.0125]
+      },
+      "properties": {
+        "latitude": 19.0125,
+        "longitude": 72.8941,
+        "acquisition_date": "2026-03-15",
+        "acquisition_time": "0815",
+        "satellite": "Suomi-NPP",
+        "instrument": "VIIRS",
+        "confidence": "nominal",
+        "brightness_temperature": 348.5,
+        "bright_ti5_or_t31": 301.2,
+        "frp": 18.5,
+        "day_night": "D",
+        "source": "DEMO_DATA",
+        "is_demo": true,
+        "description": "Synthetic persistent thermal source near Mumbai Chembur petrochemical belt. Ground verification required."
+      }
+    }
+  ]
+}

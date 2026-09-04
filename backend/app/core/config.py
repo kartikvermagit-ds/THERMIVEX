@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     NASA_FIRMS_MAP_KEY: str = os.getenv("NASA_FIRMS_MAP_KEY", "DEMO_KEY")
     CORS_ORIGINS: list[str] = ["*"]
     DATA_DIR: str = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+    ENABLE_DEMO_DATA: bool = os.getenv("ENABLE_DEMO_DATA", "true").lower() in ("true", "1", "yes")
+    MAX_UPLOAD_SIZE_BYTES: int = 10 * 1024 * 1024  # 10 MB limit
 
     class Config:
         case_sensitive = True

@@ -76,3 +76,26 @@ class AlertDispatch(Base):
     dispatched_at = Column(DateTime, default=datetime.utcnow)
 
     incident = relationship("IncidentEvent", back_populates="alerts")
+
+class FirmsHotspot(Base):
+    __tablename__ = "firms_hotspots"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"FIRM-{uuid.uuid4().hex[:10].upper()}")
+    observation_hash = Column(String(64), unique=True, index=True, nullable=False)
+    latitude = Column(Float, nullable=False, index=True)
+    longitude = Column(Float, nullable=False, index=True)
+    acquisition_date = Column(String(16), nullable=False, index=True) # YYYY-MM-DD
+    acquisition_time = Column(String(8), nullable=False)              # HHMM UTC
+    observed_at = Column(DateTime, nullable=False, index=True)        # UTC timestamp
+    satellite = Column(String(32), nullable=False, index=True)        # Normalized string
+    instrument = Column(String(32), nullable=False, index=True)       # VIIRS, MODIS, etc.
+    confidence = Column(String(32), nullable=True)                    # nominal, high, low, or numeric
+    brightness_temperature = Column(Float, nullable=False)            # Primary band Kelvin (bright_ti4 / brightness)
+    bright_ti5_or_t31 = Column(Float, nullable=True)                  # Secondary band Kelvin (bright_ti5 / bright_t31)
+    frp = Column(Float, nullable=False, default=0.0)                  # Fire Radiative Power in MW
+    day_night = Column(String(4), nullable=False, default="N")        # 'D' or 'N'
+    source = Column(String(32), nullable=False, default="DEMO_DATA", index=True) # DEMO_DATA, UPLOAD_CSV, UPLOAD_GEOJSON, NASA_FIRMS_NRT
+    is_demo = Column(Boolean, nullable=False, default=False, index=True)
+    source_file = Column(String(255), nullable=True)
+    raw_properties = Column(Text, nullable=True)                      # JSON string of raw sensor attributes
+    ingested_at = Column(DateTime, default=datetime.utcnow, nullable=False)

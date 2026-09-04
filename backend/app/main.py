@@ -8,7 +8,7 @@ from app.core.config import settings
 from app.core.logging import logger
 from app.db.session import engine, Base, SessionLocal
 from app.db.models import IndustrialFacility, IncidentEvent
-from app.api.v1 import incidents, facilities, pipeline, alerts, reports
+from app.api.v1 import incidents, facilities, pipeline, alerts, reports, climate, firms
 
 def seed_database_if_empty():
     db = SessionLocal()
@@ -47,6 +47,10 @@ def seed_database_if_empty():
                     db.add(inc)
                 db.commit()
                 logger.info(f"Seeded {len(scenarios)} initial demonstration incidents.")
+
+        # 3. Seed Initial Demo FIRMS Observations if empty
+        from app.services.firms_service import seed_demo_firms_data_if_empty
+        seed_demo_firms_data_if_empty(db)
     except Exception as e:
         logger.error(f"Error during database initialization/seeding: {e}")
     finally:
@@ -83,6 +87,8 @@ app.include_router(facilities.router, prefix=settings.API_V1_STR)
 app.include_router(pipeline.router, prefix=settings.API_V1_STR)
 app.include_router(alerts.router, prefix=settings.API_V1_STR)
 app.include_router(reports.router, prefix=settings.API_V1_STR)
+app.include_router(climate.router, prefix=settings.API_V1_STR)
+app.include_router(firms.router, prefix=settings.API_V1_STR)
 
 @app.get("/health", tags=["Health"])
 def health_check():
