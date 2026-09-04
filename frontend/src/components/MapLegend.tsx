@@ -66,6 +66,27 @@ export const MapLegend: React.FC = () => {
 
           <div style={{ borderTop: '1px solid #1E293B', paddingTop: '6px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '14px', height: '10px', border: '1.5px dashed #F59E0B', backgroundColor: 'rgba(245,158,11,0.2)' }} />
+              <div>
+                <strong style={{ color: '#F59E0B', fontSize: '10px' }}>Observation Spatial Extent</strong>
+                <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>Convex hull cluster spread (km²)</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '10px', height: '10px', transform: 'rotate(45deg)', background: '#FEF08A', border: '1.5px solid #F59E0B' }} />
+              <div>
+                <strong style={{ color: '#FEF08A', fontSize: '10px' }}>Peak FRP Observation</strong>
+                <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>Highest radiative intensity point</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FCD34D', border: '1px solid #F59E0B' }} />
+              <span style={{ fontSize: '10px' }}><strong>Yellow Dot:</strong> Spaceborne Sensor Detection</span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '14px', height: '8px', border: '1.5px dashed #06B6D4', backgroundColor: 'rgba(6,182,212,0.15)' }} />
               <span style={{ fontSize: '10px' }}><strong>Cyan Box:</strong> OSM Industrial Facility</span>
             </div>

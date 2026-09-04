@@ -3,6 +3,7 @@ import { TopNav } from './components/TopNav';
 import { TriageRail } from './components/TriageRail';
 import { MapCanvas } from './components/MapCanvas';
 import { EvidenceDrawer } from './components/EvidenceDrawer';
+import { ThermalEventDrawer } from './components/ThermalEventDrawer';
 import { LayerControl } from './components/LayerControl';
 import { CorridorBar } from './components/CorridorBar';
 import { TimelineScrubber } from './components/TimelineScrubber';
@@ -18,6 +19,7 @@ import type {
   InvestigationDossier 
 } from './types/incident';
 import type { ClimateUpdateItem, ClimateQuickStats } from './types/climate';
+import type { ThermalEvent, EventTimelineResponse } from './types/event';
 import { 
   fetchIncidentFeed, 
   fetchFacilities, 
@@ -27,16 +29,31 @@ import {
   simulateScenario 
 } from './services/api';
 import { fetchClimateFeed, DEFAULT_CLIMATE_UPDATES } from './services/climateService';
+import { 
+  fetchThermalEvents, 
+  fetchThermalEventDetail, 
+  fetchEventTimeline, 
+  triggerEventClustering 
+} from './services/eventsService';
 
 export const App: React.FC = () => {
   const [incidents, setIncidents] = useState<IncidentFeature[]>([]);
   const [facilities, setFacilities] = useState<FacilityFeature[]>([]);
+  const [thermalEvents, setThermalEvents] = useState<ThermalEvent[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [scenarios, setScenarios] = useState<ScenarioItem[]>([]);
   
   const [currentTab, setCurrentTab] = useState<'map' | 'about'>('map');
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
   const [activeDossier, setActiveDossier] = useState<InvestigationDossier | null>(null);
+
+  // Phase 2 Thermal Event States
+  const [selectedThermalEventId, setSelectedThermalEventId] = useState<string | null>(null);
+  const [selectedThermalEvent, setSelectedThermalEvent] = useState<ThermalEvent | null>(null);
+  const [eventTimeline, setEventTimeline] = useState<EventTimelineResponse | null>(null);
+  const [isLoadingTimeline, setIsLoadingTimeline] = useState<boolean>(false);
+  const [isClusteringLoading, setIsClusteringLoading] = useState<boolean>(false);
+
   const [flyToCoords, setFlyToCoords] = useState<[number, number] | null>(null);
   const [flyToZoom, setFlyToZoom] = useState<number>(15);
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
@@ -58,7 +75,9 @@ export const App: React.FC = () => {
     hotspots: true,
     plumes: true,
     facilities: true,
-    footprints: true
+    footprints: true,
+    thermalEvents: true,
+    rawObservations: true
   });
 
   const playTacticalAlertChime = () => {
@@ -98,16 +117,18 @@ export const App: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [feedRes, facRes, statsRes, scenRes] = await Promise.all([
+      const [feedRes, facRes, statsRes, scenRes, eventsRes] = await Promise.all([
         fetchIncidentFeed(0),
         fetchFacilities(),
         fetchDashboardStats(),
-        fetchScenarios()
+        fetchScenarios(),
+        fetchThermalEvents({ limit: 100 }).catch(() => ({ total_count: 0, events: [] }))
       ]);
       setIncidents(feedRes.features);
       setFacilities(facRes.features);
       setStats(statsRes);
       setScenarios(scenRes);
+      setThermalEvents(eventsRes.events || []);
 
       // Load synthesized / real-time climate telemetry feed
       const climateRes = await fetchClimateFeed(feedRes.features, statsRes);
@@ -126,6 +147,11 @@ export const App: React.FC = () => {
 
   const handleSelectIncident = async (id: string) => {
     setSelectedIncidentId(id);
+    // Dismiss thermal event drawer if open to avoid panel collisions
+    setSelectedThermalEvent(null);
+    setSelectedThermalEventId(null);
+    setEventTimeline(null);
+
     try {
       const dossier = await fetchInvestigationDossier(id);
       setActiveDossier(dossier);
@@ -133,6 +159,51 @@ export const App: React.FC = () => {
       setFlyToCoords(dossier.coordinates);
     } catch (err) {
       console.error('Failed to load dossier:', err);
+    }
+  };
+
+  const handleSelectThermalEvent = async (id: string) => {
+    setSelectedThermalEventId(id);
+    // Dismiss incident dossier if open
+    setSelectedIncidentId(null);
+    setActiveDossier(null);
+
+    const localEv = thermalEvents.find(e => e.id === id);
+    if (localEv) {
+      setSelectedThermalEvent(localEv);
+      setFlyToZoom(15);
+      setFlyToCoords([localEv.centroid_longitude, localEv.centroid_latitude]);
+    }
+
+    setIsLoadingTimeline(true);
+    try {
+      const [detail, tl] = await Promise.all([
+        fetchThermalEventDetail(id),
+        fetchEventTimeline(id)
+      ]);
+      setSelectedThermalEvent(detail);
+      setEventTimeline(tl);
+    } catch (err) {
+      console.error('Failed to load thermal event timeline:', err);
+    } finally {
+      setIsLoadingTimeline(false);
+    }
+  };
+
+  const handleTriggerClustering = async () => {
+    setIsClusteringLoading(true);
+    try {
+      await triggerEventClustering({
+        spatial_threshold_m: 750.0,
+        temporal_threshold_minutes: 60.0,
+        algorithm_version: 'STGRAPH-1.0'
+      });
+      await loadData();
+      playTacticalAlertChime();
+    } catch (err) {
+      console.error('Clustering execution failed:', err);
+    } finally {
+      setIsClusteringLoading(false);
     }
   };
 
@@ -197,9 +268,18 @@ export const App: React.FC = () => {
         <div style={{ display: 'flex', flex: 1, position: 'relative', overflow: 'hidden' }}>
           <TriageRail
             incidents={displayIncidents}
+            thermalEvents={thermalEvents}
             selectedIncidentId={selectedIncidentId}
+            selectedThermalEventId={selectedThermalEventId}
             onSelectIncident={handleSelectIncident}
+            onSelectThermalEvent={handleSelectThermalEvent}
             onLocateIncident={handleLocateIncident}
+            onLocateThermalEvent={(coords) => {
+              setFlyToZoom(15);
+              setFlyToCoords(coords);
+            }}
+            onTriggerClustering={handleTriggerClustering}
+            isClusteringLoading={isClusteringLoading}
           />
 
           <div style={{ flex: 1, position: 'relative', height: '100%' }}>
@@ -218,8 +298,11 @@ export const App: React.FC = () => {
             <MapCanvas
               incidents={displayIncidents}
               facilities={facilities}
+              thermalEvents={thermalEvents}
               selectedIncidentId={selectedIncidentId}
+              selectedThermalEventId={selectedThermalEventId}
               onSelectIncident={handleSelectIncident}
+              onSelectThermalEvent={handleSelectThermalEvent}
               flyToCoords={flyToCoords}
               flyToZoom={flyToZoom}
               layersVisible={layersVisible}
@@ -241,6 +324,33 @@ export const App: React.FC = () => {
               onFlyToCorridor={handleFlyToCorridor}
             />
           </div>
+
+          {/* Slide-over Thermal Event Intelligence Drawer */}
+          {selectedThermalEvent && (
+            <ThermalEventDrawer
+              event={selectedThermalEvent}
+              timeline={eventTimeline}
+              isLoadingTimeline={isLoadingTimeline}
+              onClose={() => {
+                setSelectedThermalEvent(null);
+                setSelectedThermalEventId(null);
+                setEventTimeline(null);
+              }}
+              onInspectCorrelatedIncident={(title) => {
+                const matched = incidents.find(i => 
+                  title && i.properties.facility_name && (
+                    title.toLowerCase().includes(i.properties.facility_name.toLowerCase()) ||
+                    i.properties.facility_name.toLowerCase().includes(title.toLowerCase())
+                  )
+                );
+                if (matched) {
+                  handleSelectIncident(matched.properties.id);
+                } else if (incidents.length > 0) {
+                  handleSelectIncident(incidents[0].properties.id);
+                }
+              }}
+            />
+          )}
 
           {/* Slide-over Evidence Investigation Drawer */}
           {activeDossier && (

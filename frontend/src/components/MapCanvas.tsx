@@ -2,12 +2,16 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { Satellite, Moon, Crosshair, Compass } from 'lucide-react';
 import type { IncidentFeature, FacilityFeature } from '../types/incident';
+import type { ThermalEvent } from '../types/event';
 
 interface MapCanvasProps {
   incidents: IncidentFeature[];
   facilities: FacilityFeature[];
+  thermalEvents?: ThermalEvent[];
   selectedIncidentId: string | null;
+  selectedThermalEventId?: string | null;
   onSelectIncident: (id: string) => void;
+  onSelectThermalEvent?: (id: string) => void;
   flyToCoords: [number, number] | null;
   flyToZoom?: number;
   layersVisible: {
@@ -15,14 +19,19 @@ interface MapCanvasProps {
     plumes: boolean;
     facilities: boolean;
     footprints: boolean;
+    thermalEvents?: boolean;
+    rawObservations?: boolean;
   };
 }
 
 export const MapCanvas: React.FC<MapCanvasProps> = ({
   incidents,
   facilities,
+  thermalEvents = [],
   selectedIncidentId,
+  selectedThermalEventId = null,
   onSelectIncident,
+  onSelectThermalEvent,
   flyToCoords,
   flyToZoom = 15,
   layersVisible
@@ -407,7 +416,175 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         group.addLayer(marker);
       });
     }
-  }, [incidents, facilities, selectedIncidentId, layersVisible, onSelectIncident]);
+
+    // 6. Render Spatio-Temporal Candidate Thermal Events (Polygons, Peaks, Centroids, Dots)
+    if (layersVisible.thermalEvents !== false && thermalEvents && thermalEvents.length > 0) {
+      thermalEvents.forEach((ev) => {
+        const isEvSelected = selectedThermalEventId === ev.id;
+
+        // 6a. Render Observation Spatial Extent (Convex Hull Geometry)
+        if (ev.convex_hull_geojson) {
+          try {
+            const geom = JSON.parse(ev.convex_hull_geojson);
+            if (geom.type === 'Polygon' && geom.coordinates && geom.coordinates[0]) {
+              // GeoJSON is [lon, lat], Leaflet wants [lat, lon]
+              const latlngs = geom.coordinates[0].map((pt: [number, number]) => [pt[1], pt[0]]);
+              const hullPoly = L.polygon(latlngs, {
+                color: isEvSelected ? '#00F0FF' : '#F59E0B',
+                weight: isEvSelected ? 2.5 : 1.5,
+                fillColor: '#F59E0B',
+                fillOpacity: isEvSelected ? 0.24 : 0.12,
+                dashArray: isEvSelected ? undefined : '5, 5'
+              });
+
+              hullPoly.bindTooltip(`
+                <div style="font-family: inherit; font-size: 11px; line-height: 1.4;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; border-bottom: 1px solid #1E293B; padding-bottom: 4px;">
+                    <strong style="color: #F59E0B; font-family: monospace;">${ev.id}</strong>
+                    <span style="font-size: 9px; background: rgba(245,158,11,0.2); color: #FCD34D; padding: 1px 5px; border-radius: 3px; font-weight: 700;">
+                      ${ev.status}
+                    </span>
+                  </div>
+                  <div style="color: #E2E8F0; font-weight: 600; margin-bottom: 2px;">${ev.title}</div>
+                  <div style="color: #94A3B8; font-size: 10px;">
+                    Observation Spatial Extent: <strong style="color: #38BDF8;">${ev.spatial_extent_km2} km²</strong>
+                  </div>
+                  <div style="color: #94A3B8; font-size: 10px;">
+                    Observations: <strong>${ev.observation_count}</strong> | Peak: <strong style="color: #F59E0B;">${ev.frp_peak_mw} MW</strong>
+                  </div>
+                  <div style="color: #64748B; font-size: 9px; margin-top: 4px;">
+                    👉 Click to open Event Intelligence Drawer
+                  </div>
+                </div>
+              `, { className: 'tactical-tooltip', sticky: true });
+
+              if (onSelectThermalEvent) {
+                hullPoly.on('click', () => onSelectThermalEvent(ev.id));
+              }
+              group.addLayer(hullPoly);
+            } else if (geom.type === 'LineString' && geom.coordinates) {
+              const latlngs = geom.coordinates.map((pt: [number, number]) => [pt[1], pt[0]]);
+              const line = L.polyline(latlngs, {
+                color: isEvSelected ? '#00F0FF' : '#F59E0B',
+                weight: 2,
+                dashArray: '4, 4'
+              });
+              if (onSelectThermalEvent) {
+                line.on('click', () => onSelectThermalEvent(ev.id));
+              }
+              group.addLayer(line);
+            }
+          } catch (e) {
+            // Skip unparseable geojson
+          }
+        }
+
+        // 6b. Render Peak Observation Diamond Marker
+        if (ev.peak_latitude && ev.peak_longitude) {
+          const peakIcon = L.divIcon({
+            html: `
+              <div style="position: relative; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                <div style="position: absolute; width: 22px; height: 22px; border-radius: 50%; background: rgba(245, 158, 11, 0.35); filter: blur(2px);"></div>
+                ${isEvSelected ? '<div style="position: absolute; width: 34px; height: 34px; border: 2px dashed #00F0FF; border-radius: 50%;"></div>' : ''}
+                <div style="width: 13px; height: 13px; transform: rotate(45deg); background: #FEF08A; border: 2px solid #F59E0B; box-shadow: 0 0 10px #F59E0B; z-index: 5;"></div>
+              </div>
+            `,
+            className: 'custom-leaflet-marker',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+          });
+
+          const peakMarker = L.marker([ev.peak_latitude, ev.peak_longitude], {
+            icon: peakIcon,
+            zIndexOffset: isEvSelected ? 1200 : 800
+          });
+
+          peakMarker.bindTooltip(`
+            <div style="font-family: inherit; font-size: 11px; line-height: 1.4;">
+              <div style="color: #FCD34D; font-weight: 800; font-size: 11px; margin-bottom: 2px;">
+                ◇ PEAK OBSERVATION (${ev.frp_peak_mw} MW)
+              </div>
+              <div style="color: #CBD5E1; font-size: 10px;">
+                Event: <span style="font-family: monospace;">#${ev.id}</span>
+              </div>
+              <div style="color: #94A3B8; font-size: 10px;">
+                Max Temp: <strong>${ev.max_brightness_kelvin} K</strong>
+              </div>
+              <div style="color: #38BDF8; font-size: 9px; margin-top: 4px; font-weight: 600;">
+                👉 Click to open Event Drawer
+              </div>
+            </div>
+          `, { className: 'tactical-tooltip', sticky: true });
+
+          if (onSelectThermalEvent) {
+            peakMarker.on('click', () => onSelectThermalEvent(ev.id));
+          }
+          group.addLayer(peakMarker);
+        }
+
+        // 6c. Render FRP-Weighted Centroid Crosshair Marker
+        const centroidIcon = L.divIcon({
+          html: `
+            <div style="position: relative; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background: #06B6D4; border: 1.5px solid #E0F2FE; box-shadow: 0 0 6px #06B6D4;"></div>
+            </div>
+          `,
+          className: 'custom-leaflet-marker',
+          iconSize: [22, 22],
+          iconAnchor: [11, 11]
+        });
+
+        const centroidMarker = L.marker([ev.centroid_latitude, ev.centroid_longitude], {
+          icon: centroidIcon,
+          zIndexOffset: isEvSelected ? 1100 : 700
+        });
+
+        centroidMarker.bindTooltip(`
+          <div style="font-family: inherit; font-size: 10px;">
+            <strong style="color: #38BDF8;">FRP-Weighted Centroid</strong><br/>
+            <span style="color: #94A3B8;">Event: ${ev.id}</span>
+          </div>
+        `, { className: 'tactical-tooltip', sticky: true });
+
+        if (onSelectThermalEvent) {
+          centroidMarker.on('click', () => onSelectThermalEvent(ev.id));
+        }
+        group.addLayer(centroidMarker);
+
+        // 6d. Render Individual Member Satellite Observation Dots
+        if (layersVisible.rawObservations !== false && ev.observations) {
+          ev.observations.forEach((obs) => {
+            const dotIcon = L.divIcon({
+              html: `
+                <div style="width: 7px; height: 7px; border-radius: 50%; background: #FCD34D; border: 1px solid #F59E0B; box-shadow: 0 0 4px #F59E0B; cursor: pointer;"></div>
+              `,
+              className: 'custom-leaflet-marker',
+              iconSize: [7, 7],
+              iconAnchor: [3.5, 3.5]
+            });
+
+            const dotMarker = L.marker([obs.latitude, obs.longitude], {
+              icon: dotIcon,
+              zIndexOffset: 600
+            });
+
+            dotMarker.bindTooltip(`
+              <div style="font-family: monospace; font-size: 10px; line-height: 1.3;">
+                <strong style="color: #FEF08A;">${obs.satellite} · ${obs.instrument}</strong><br/>
+                <span>FRP: ${obs.frp} MW | Temp: ${obs.brightness_temperature} K</span><br/>
+                <span style="color: #94A3B8;">Dist to Centroid: ${Math.round(obs.distance_to_centroid_m)}m</span>
+              </div>
+            `, { className: 'tactical-tooltip', sticky: true });
+
+            if (onSelectThermalEvent) {
+              dotMarker.on('click', () => onSelectThermalEvent(ev.id));
+            }
+            group.addLayer(dotMarker);
+          });
+        }
+      });
+    }
+  }, [incidents, facilities, thermalEvents, selectedIncidentId, selectedThermalEventId, layersVisible, onSelectIncident, onSelectThermalEvent]);
 
   return (
     <div style={{ position: 'relative', flex: 1, height: '100%', overflow: 'hidden' }}>
