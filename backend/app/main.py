@@ -8,7 +8,7 @@ from app.core.config import settings
 from app.core.logging import logger
 from app.db.session import engine, Base, SessionLocal
 from app.db.models import IndustrialFacility, IncidentEvent
-from app.api.v1 import incidents, facilities, pipeline, alerts, reports, climate, firms
+from app.api.v1 import incidents, facilities, pipeline, alerts, reports, climate, firms, events
 
 def seed_database_if_empty():
     db = SessionLocal()
@@ -89,6 +89,7 @@ app.include_router(alerts.router, prefix=settings.API_V1_STR)
 app.include_router(reports.router, prefix=settings.API_V1_STR)
 app.include_router(climate.router, prefix=settings.API_V1_STR)
 app.include_router(firms.router, prefix=settings.API_V1_STR)
+app.include_router(events.router, prefix=settings.API_V1_STR)
 
 @app.get("/health", tags=["Health"])
 def health_check():

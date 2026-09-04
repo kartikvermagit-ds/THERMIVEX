@@ -1,8 +1,11 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, Float, Integer, DateTime, ForeignKey, Text, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.db.session import Base
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 class IndustrialFacility(Base):
     __tablename__ = "industrial_facilities"
@@ -16,7 +19,7 @@ class IndustrialFacility(Base):
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
     geometry_geojson = Column(Text, nullable=True) # GeoJSON string for polygon/multipolygon
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     incidents = relationship("IncidentEvent", back_populates="facility")
 
@@ -58,7 +61,7 @@ class IncidentEvent(Base):
     footprint_geojson = Column(Text, nullable=True)
     plume_geojson = Column(Text, nullable=True)
     
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=utc_now, index=True)
 
     facility = relationship("IndustrialFacility", back_populates="incidents")
     alerts = relationship("AlertDispatch", back_populates="incident")
@@ -73,7 +76,7 @@ class AlertDispatch(Base):
     recipient = Column(String(128), default="EOC_DISPATCH_DESK")
     dispatch_status = Column(String(32), default="DELIVERED")
     payload_snapshot = Column(Text, nullable=True)
-    dispatched_at = Column(DateTime, default=datetime.utcnow)
+    dispatched_at = Column(DateTime, default=utc_now)
 
     incident = relationship("IncidentEvent", back_populates="alerts")
 
@@ -98,7 +101,7 @@ class FirmsHotspot(Base):
     is_demo = Column(Boolean, nullable=False, default=False, index=True)
     source_file = Column(String(255), nullable=True)
     raw_properties = Column(Text, nullable=True)                      # JSON string of raw sensor attributes
-    ingested_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    ingested_at = Column(DateTime, default=utc_now, nullable=False)
 
     event_links = relationship("EventObservationLink", back_populates="hotspot", cascade="all, delete-orphan")
 
@@ -113,7 +116,7 @@ class ClusteringRun(Base):
     observations_considered = Column(Integer, default=0, nullable=False)
     events_created = Column(Integer, default=0, nullable=False)
     events_updated = Column(Integer, default=0, nullable=False)
-    started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    started_at = Column(DateTime, default=utc_now, nullable=False)
     completed_at = Column(DateTime, nullable=True)
     status = Column(String(32), default="SUCCESS", nullable=False)
 
@@ -148,8 +151,8 @@ class ThermalEvent(Base):
     is_demo = Column(Boolean, default=False, index=True)
     clustering_algorithm_version = Column(String(32), default="STGRAPH-1.0")
     clustering_run_id = Column(String(64), ForeignKey("clustering_runs.id"), nullable=True, index=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
 
     clustering_run = relationship("ClusteringRun", back_populates="events")
     observation_links = relationship("EventObservationLink", back_populates="event", cascade="all, delete-orphan")
@@ -162,7 +165,7 @@ class EventObservationLink(Base):
     hotspot_id = Column(String(64), ForeignKey("firms_hotspots.id", ondelete="CASCADE"), nullable=False, index=True)
     distance_to_centroid_m = Column(Float, default=0.0)
     observed_at = Column(DateTime, nullable=False, index=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
 
     event = relationship("ThermalEvent", back_populates="observation_links")
     hotspot = relationship("FirmsHotspot", back_populates="event_links")

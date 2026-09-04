@@ -63,7 +63,7 @@ def parse_observed_at(acquisition_date: str, acquisition_time: str) -> datetime:
         # Fallback to date only
         return datetime.strptime(norm_date, "%Y-%m-%d")
     except Exception:
-        return datetime.utcnow()
+        return datetime.now(timezone.utc).replace(tzinfo=None)
 
 def normalize_satellite_name(raw_sat: Optional[str]) -> str:
     """Normalizes satellite platform name while avoiding strict rejection."""
@@ -383,7 +383,7 @@ def ingest_firms_records(
             is_demo=is_demo,
             source_file=source_file,
             raw_properties=r.get("raw_properties"),
-            ingested_at=datetime.utcnow()
+            ingested_at=datetime.now(timezone.utc).replace(tzinfo=None)
         )
         new_entities.append(entity)
 

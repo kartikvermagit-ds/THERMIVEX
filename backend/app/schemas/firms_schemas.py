@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 class FirmsHotspotBase(BaseModel):
     latitude: float = Field(..., ge=-90.0, le=90.0, description="WGS84 latitude between -90 and 90")
@@ -47,8 +47,7 @@ class FirmsHotspotResponse(FirmsHotspotBase):
     ingested_at: datetime
     raw_properties: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class FirmsHotspotListResponse(BaseModel):
     total_count: int

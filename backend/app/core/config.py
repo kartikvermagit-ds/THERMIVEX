@@ -1,5 +1,5 @@
 import os
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "THERMIVEX Industrial Fire Intelligence"
@@ -11,7 +11,6 @@ class Settings(BaseSettings):
     ENABLE_DEMO_DATA: bool = os.getenv("ENABLE_DEMO_DATA", "true").lower() in ("true", "1", "yes")
     MAX_UPLOAD_SIZE_BYTES: int = 10 * 1024 * 1024  # 10 MB limit
 
-    class Config:
-        case_sensitive = True
+    model_config = SettingsConfigDict(case_sensitive=True)
 
 settings = Settings()

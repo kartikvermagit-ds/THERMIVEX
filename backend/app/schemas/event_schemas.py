@@ -1,11 +1,23 @@
 from datetime import datetime
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
+from typing import List, Optional, Dict, Any, Literal
+from pydantic import BaseModel, Field, ConfigDict
+
+# Strict Event Timeline Stage
+EventTimelineStageType = Literal[
+    "INITIAL",
+    "FORMING",
+    "PERSISTING",
+    "ESCALATING",
+    "COOLING",
+    "CLOSED"
+]
 
 class EventClusterRequest(BaseModel):
     spatial_threshold_m: float = Field(750.0, ge=50.0, le=10000.0, description="Spatial distance threshold in meters")
     temporal_threshold_minutes: float = Field(60.0, ge=5.0, le=1440.0, description="Temporal window threshold in minutes")
     date: Optional[str] = Field(None, description="Optional acquisition date filter (YYYY-MM-DD)")
+    start_date: Optional[str] = Field(None, description="Optional start acquisition date (YYYY-MM-DD)")
+    end_date: Optional[str] = Field(None, description="Optional end acquisition date (YYYY-MM-DD)")
     is_demo: Optional[bool] = Field(None, description="Filter for demo or production observations")
     algorithm_version: str = Field("STGRAPH-1.0", description="Clustering algorithm version tag")
 
@@ -18,6 +30,8 @@ class EventClusterSummary(BaseModel):
     observations_considered: int
     events_created: int
     events_updated: int
+    observations_unclustered: int = 0
+    events_suppressed: int = 0
     duration_seconds: float
     status: str
 
@@ -33,8 +47,7 @@ class EventObservationSummary(BaseModel):
     confidence: Optional[str] = None
     distance_to_centroid_m: float
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ThermalEventResponse(BaseModel):
     id: str
@@ -67,8 +80,7 @@ class ThermalEventResponse(BaseModel):
     updated_at: datetime
     observations: Optional[List[EventObservationSummary]] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ThermalEventListResponse(BaseModel):
     total_count: int
@@ -91,15 +103,19 @@ class EventTimelineItem(BaseModel):
     cumulative_observation_count: int
     cumulative_frp_total_mw: float
     current_frp_peak_mw: float
-    spatial_extent_km2: float
-    new_observations: int
+    previous_frp_peak_mw: Optional[float] = None
     frp_delta_percent: Optional[float] = None
-    stage: str # INITIAL, FORMING, PERSISTING, ESCALATING, COOLING, CLOSED
+    time_since_previous_minutes: Optional[float] = None
+    spatial_extent_km2: float
+    spatial_extent_delta_km2: Optional[float] = None
+    new_observations: int
+    stage: EventTimelineStageType
     satellite: str
     instrument: str
     latitude: float
     longitude: float
     frp: float
+    cluster_confidence: Optional[float] = None
 
 class EventTimelineResponse(BaseModel):
     event_id: str
