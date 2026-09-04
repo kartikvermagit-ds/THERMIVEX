@@ -215,3 +215,209 @@ def get_sitrep_markdown(db: Session = Depends(get_db)):
         media_type="text/markdown",
         headers={"Content-Disposition": "attachment; filename=THERMIVEX_National_SitRep.md"}
     )
+
+@router.get("/sitrep/pdf")
+def get_sitrep_pdf(db: Session = Depends(get_db)):
+    """
+    Generates and streams a formatted National Situational Report (SitRep) PDF for disaster management commanders.
+    """
+    sitrep = get_sitrep_summary(db)
+    m = sitrep["macro_metrics"]
+    target = sitrep["highest_priority_target"]
+    incidents = db.query(IncidentEvent).order_by(IncidentEvent.risk_score.desc()).all()
+
+    try:
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib import colors
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=letter,
+            rightMargin=36,
+            leftMargin=36,
+            topMargin=36,
+            bottomMargin=36
+        )
+        elements = []
+        styles = getSampleStyleSheet()
+
+        title_style = ParagraphStyle(
+            'SitRepTitle',
+            parent=styles['Heading1'],
+            fontSize=15,
+            leading=19,
+            textColor=colors.HexColor('#0F172A'),
+            spaceAfter=2
+        )
+        subtitle_style = ParagraphStyle(
+            'SitRepSubtitle',
+            parent=styles['Normal'],
+            fontSize=8,
+            leading=11,
+            textColor=colors.HexColor('#475569')
+        )
+        threat_style = ParagraphStyle(
+            'ThreatLevel',
+            parent=styles['Heading2'],
+            fontSize=11,
+            leading=14,
+            textColor=colors.HexColor('#DC2626') if 'RED' in sitrep['threat_level'] else colors.HexColor('#D97706')
+        )
+        section_style = ParagraphStyle(
+            'SectionHead',
+            parent=styles['Heading2'],
+            fontSize=10,
+            leading=13,
+            textColor=colors.HexColor('#0F172A'),
+            spaceBefore=6,
+            spaceAfter=4
+        )
+        cell_style = ParagraphStyle(
+            'TableCell',
+            parent=styles['Normal'],
+            fontSize=8,
+            leading=10,
+            textColor=colors.HexColor('#1E293B')
+        )
+        cell_bold = ParagraphStyle(
+            'TableCellBold',
+            parent=cell_style,
+            fontName='Helvetica-Bold'
+        )
+        th_style = ParagraphStyle(
+            'TableHeader',
+            parent=cell_style,
+            fontName='Helvetica-Bold',
+            textColor=colors.white
+        )
+
+        elements.append(Paragraph("THERMIVEX NATIONAL SITUATIONAL REPORT (SITREP)", title_style))
+        elements.append(Paragraph(
+            f"<b>Agency:</b> {sitrep['reporting_agency']} | <b>Generated:</b> {sitrep['generated_at']}",
+            subtitle_style
+        ))
+        elements.append(Paragraph(
+            f"<b>Classification:</b> RESTRICTED // TACTICAL DISASTER INTELLIGENCE",
+            subtitle_style
+        ))
+        elements.append(Spacer(1, 6))
+        elements.append(Paragraph(f"NATIONAL THREAT STATUS: <b>{sitrep['threat_level']}</b>", threat_style))
+        elements.append(Spacer(1, 8))
+
+        # 1. Macro Metrics Table
+        elements.append(Paragraph("1. EXECUTIVE SITUATION SUMMARY", section_style))
+        macro_data = [
+            [
+                Paragraph("<b>Active Hotspots</b>", cell_bold),
+                Paragraph(str(m['total_active_clusters']), cell_style),
+                Paragraph("<b>Critical Industrial Fires</b>", cell_bold),
+                Paragraph(f"<font color='#DC2626'><b>{m['critical_disasters']}</b></font>", cell_style)
+            ],
+            [
+                Paragraph("<b>High-Risk Perimeters</b>", cell_bold),
+                Paragraph(str(m['high_risk_perimeters']), cell_style),
+                Paragraph("<b>Suppressed Routine Flares</b>", cell_bold),
+                Paragraph(str(m['routine_flaring_sources']), cell_style)
+            ],
+            [
+                Paragraph("<b>Cumulative FRP Flux</b>", cell_bold),
+                Paragraph(f"{m['cumulative_radiative_flux_mw']} MW", cell_style),
+                Paragraph("<b>Emergency Dispatches</b>", cell_bold),
+                Paragraph(str(m['total_emergency_dispatches']), cell_style)
+            ]
+        ]
+        macro_table = Table(macro_data, colWidths=[130, 135, 140, 135])
+        macro_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F8FAFC')),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        elements.append(macro_table)
+        elements.append(Spacer(1, 8))
+
+        # 2. Priority Target
+        if target and target.get("incident_id"):
+            elements.append(Paragraph("2. HIGHEST PRIORITY CRITICAL TARGET", section_style))
+            priority_data = [
+                [
+                    Paragraph("<b>Incident Ref:</b>", cell_bold),
+                    Paragraph(f"#{target['incident_id']}", cell_style),
+                    Paragraph("<b>Facility Complex:</b>", cell_bold),
+                    Paragraph(str(target['facility_name']), cell_style)
+                ],
+                [
+                    Paragraph("<b>Risk Score:</b>", cell_bold),
+                    Paragraph(f"<font color='#DC2626'><b>{target['risk_score']} / 100 ({target['severity']})</b></font>", cell_style),
+                    Paragraph("<b>Radiative Power:</b>", cell_bold),
+                    Paragraph(f"{target['frp_mw']} MW", cell_style)
+                ],
+                [
+                    Paragraph("<b>Coordinates:</b>", cell_bold),
+                    Paragraph(str(target['location']), cell_style),
+                    Paragraph("<b>Status:</b>", cell_bold),
+                    Paragraph("ACTIVE TACTICAL RESPONSE", cell_style)
+                ]
+            ]
+            pri_table = Table(priority_data, colWidths=[110, 155, 120, 155])
+            pri_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FEF2F2')),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#FECACA')),
+                ('TOPPADDING', (0, 0), (-1, -1), 3),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ]))
+            elements.append(pri_table)
+            elements.append(Spacer(1, 8))
+
+        # 3. Active Incident Register Table
+        elements.append(Paragraph("3. ACTIVE INCIDENTS REGISTER", section_style))
+        table_rows = [
+            [
+                Paragraph("<b>ID</b>", th_style),
+                Paragraph("<b>Facility</b>", th_style),
+                Paragraph("<b>Class</b>", th_style),
+                Paragraph("<b>Risk</b>", th_style),
+                Paragraph("<b>FRP</b>", th_style),
+                Paragraph("<b>Coordinates</b>", th_style)
+            ]
+        ]
+        for inc in incidents[:10]:
+            table_rows.append([
+                Paragraph(inc.id, cell_style),
+                Paragraph((inc.facility_name or "Unknown")[:22], cell_style),
+                Paragraph(inc.classification.replace('_', ' ')[:16], cell_style),
+                Paragraph(f"{inc.risk_score}", cell_bold),
+                Paragraph(f"{inc.frp_total:.1f} MW", cell_style),
+                Paragraph(f"{inc.latitude:.3f}, {inc.longitude:.3f}", cell_style)
+            ])
+        inc_table = Table(table_rows, colWidths=[65, 140, 140, 45, 65, 85])
+        inc_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0F172A')),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F8FAFC')]),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ]))
+        elements.append(inc_table)
+        elements.append(Spacer(1, 8))
+
+        # 4. Mandatory Directives
+        elements.append(Paragraph("4. MANDATORY TACTICAL DIRECTIVES", section_style))
+        for d in sitrep.get("actionable_directives", []):
+            elements.append(Paragraph(f"• {d}", cell_style))
+            elements.append(Spacer(1, 2))
+
+        doc.build(elements)
+        buffer.seek(0)
+        return StreamingResponse(
+            buffer,
+            media_type="application/pdf",
+            headers={"Content-Disposition": "attachment; filename=THERMIVEX_National_SitRep.pdf"}
+        )
+    except Exception as e:
+        content = f"THERMIVEX SITREP EXCEPTION: {str(e)}\n\n"
+        return Response(content=content, media_type="text/plain")
+

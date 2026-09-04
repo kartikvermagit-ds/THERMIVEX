@@ -68,6 +68,11 @@ export function getSitRepMarkdownUrl(): string {
   return `${API_BASE}/reports/sitrep/markdown`;
 }
 
+export function getSitRepPdfUrl(): string {
+  return `${API_BASE}/reports/sitrep/pdf`;
+}
+
 export function getGeoJsonExportUrl(): string {
   return `${API_BASE}/incidents/export/geojson`;
 }
+

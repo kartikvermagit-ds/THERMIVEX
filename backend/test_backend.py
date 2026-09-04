@@ -52,10 +52,23 @@ def test_backend_suite():
         assert res.status_code == 202, f"Alert dispatch failed: {res.text}"
         print("PASS: /api/v1/alerts/dispatch (Emergency dispatch logged)")
 
-        # 7. Dossier Report JSON
+        # 7. Dossier Report JSON & PDF
         res = client.get(f"/api/v1/reports/dossier/{sim_res['incident_id']}/json")
         assert res.status_code == 200, f"Report JSON failed: {res.text}"
         print("PASS: /api/v1/reports/dossier/json")
+
+        res = client.get(f"/api/v1/reports/dossier/{sim_res['incident_id']}/pdf")
+        assert res.status_code == 200, f"Dossier PDF failed: {res.text}"
+        assert res.headers.get("content-type") == "application/pdf", "Expected application/pdf"
+        assert res.content.startswith(b"%PDF"), "Dossier PDF must begin with %PDF header"
+        print(f"PASS: /api/v1/reports/dossier/pdf (Generated {len(res.content)} bytes)")
+
+        # 7b. National SitRep PDF & Markdown
+        res = client.get("/api/v1/reports/sitrep/pdf")
+        assert res.status_code == 200, f"SitRep PDF failed: {res.text}"
+        assert res.headers.get("content-type") == "application/pdf", "Expected application/pdf"
+        assert res.content.startswith(b"%PDF"), "SitRep PDF must begin with %PDF header"
+        print(f"PASS: /api/v1/reports/sitrep/pdf (Generated {len(res.content)} bytes)")
 
         # 8. Climate feed endpoint check
         res = client.get("/api/v1/climate/feed")

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { RefreshCw, HelpCircle, Radio, FileText, Download, Map, Info, Bell, BellOff } from 'lucide-react';
 import { ThermivexLogo } from './ThermivexLogo';
 import type { DashboardStats, ScenarioItem } from '../types/incident';
-import { getSitRepMarkdownUrl, getGeoJsonExportUrl } from '../services/api';
+import { getSitRepMarkdownUrl, getSitRepPdfUrl, getGeoJsonExportUrl } from '../services/api';
 
 interface TopNavProps {
   stats: DashboardStats | null;
@@ -184,9 +184,32 @@ export const TopNav: React.FC<TopNavProps> = ({
         </button>
 
         <a
+          href={getSitRepPdfUrl()}
+          download="THERMIVEX_National_SitRep.pdf"
+          title="Export 24-Hour Situation Report (Tactical PDF)"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            backgroundColor: 'rgba(239, 68, 68, 0.12)',
+            border: '1px solid rgba(239, 68, 68, 0.4)',
+            color: '#FCA5A5',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '11px',
+            fontWeight: 600,
+            textDecoration: 'none',
+            transition: 'all 0.1s ease'
+          }}
+        >
+          <FileText size={12} color="#EF4444" />
+          <span>SitRep PDF</span>
+        </a>
+
+        <a
           href={getSitRepMarkdownUrl()}
           download="THERMIVEX_National_SitRep.md"
-          title="Export 24-Hour Situation Report"
+          title="Export 24-Hour Situation Report (Markdown)"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -203,7 +226,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           }}
         >
           <FileText size={12} color="#38BDF8" />
-          <span>SitRep</span>
+          <span>SitRep MD</span>
         </a>
 
         <a
