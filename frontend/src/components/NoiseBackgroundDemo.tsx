@@ -1,4 +1,3 @@
-import React from 'react';
 import { NoiseBackground } from './ui/noise-background';
 
 type NoiseBackgroundDemoProps = {
