@@ -1,104 +1,108 @@
 import React, { useState } from 'react';
-import { Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { Info, X } from 'lucide-react';
 
 export const MapLegend: React.FC = () => {
-  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
   return (
-    <div style={{
-      position: 'absolute',
-      bottom: '72px',
-      left: '20px',
-      backgroundColor: 'rgba(15, 20, 28, 0.92)',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid var(--border-subtle)',
-      borderRadius: '8px',
-      padding: isExpanded ? '12px 14px' : '6px 10px',
-      zIndex: 400,
-      boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
-      fontSize: '11px',
-      color: '#E2E8F0',
-      minWidth: isExpanded ? '240px' : 'auto',
-      transition: 'all 0.2s ease'
-    }}>
-      <div 
-        onClick={() => setIsExpanded(!isExpanded)}
-        style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          cursor: 'pointer',
-          gap: '8px'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: 'var(--accent-cyan)' }}>
-          <Info size={13} />
-          <span>TACTICAL MAP GUIDE</span>
-        </div>
-        {isExpanded ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-      </div>
+    <div className="absolute bottom-12 left-4 z-[400] font-mono text-xs select-none">
+      {/* 1. Floating Compact Button */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#030a14]/85 hover:bg-[#071529]/95 border border-cyan-500/30 text-cyan-300 font-bold backdrop-blur-md shadow-xl transition-all hover:shadow-[0_0_15px_rgba(6,182,212,0.25)]"
+        >
+          <Info className="w-3.5 h-3.5 text-cyan-400" />
+          <span>MAP LEGEND</span>
+        </button>
+      )}
 
-      {isExpanded && (
-        <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '12px', height: '12px', transform: 'rotate(45deg)', background: '#FFF', border: '2px solid #EF4444', boxShadow: '0 0 6px #EF4444' }} />
-            <div>
-              <strong style={{ color: '#EF4444' }}>Accidental Industrial Fire</strong>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>FRP spike inside plant, zero historical heat</div>
+      {/* 2. Glass HUD Legend Modal/Popover */}
+      {isOpen && (
+        <div className="w-72 p-3.5 rounded-xl bg-[#030a14]/90 border border-cyan-500/30 backdrop-blur-xl shadow-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150">
+          <div className="flex items-center justify-between border-b border-white/[0.08] pb-2">
+            <div className="flex items-center gap-2 text-cyan-300 font-bold text-[11px] tracking-wider uppercase">
+              <Info className="w-3.5 h-3.5 text-cyan-400" />
+              <span>TACTICAL MAP LEGEND</span>
             </div>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#1E1B4B', border: '2px solid #818CF8', boxShadow: '0 0 6px #818CF8' }} />
-            <div>
-              <strong style={{ color: '#818CF8' }}>Routine Persistent Heat</strong>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Flaring stack/kiln with weekly baseline</div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#2E220D', border: '2px solid #F59E0B' }} />
-            <div>
-              <strong style={{ color: '#F59E0B' }}>Non-Industrial / Agricultural</strong>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Crop stubble fire outside boundary (&gt;500m)</div>
-            </div>
-          </div>
-
-          <div style={{ borderTop: '1px solid #1E293B', paddingTop: '6px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '14px', height: '10px', border: '1.5px dashed #F59E0B', backgroundColor: 'rgba(245,158,11,0.2)' }} />
+          <div className="space-y-2.5 text-[11px]">
+            {/* Accidental Industrial Fire */}
+            <div className="flex items-start gap-2.5">
+              <div className="w-3.5 h-3.5 rotate-45 bg-white border-2 border-red-500 shadow-[0_0_8px_#ef4444] shrink-0 mt-0.5" />
               <div>
-                <strong style={{ color: '#F59E0B', fontSize: '10px' }}>Observation Spatial Extent</strong>
-                <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>Convex hull cluster spread (km²)</div>
+                <strong className="text-red-400">Potential Industrial Fire</strong>
+                <div className="text-[10px] text-slate-400 font-sans">FRP spike inside plant, zero historical heat</div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '10px', height: '10px', transform: 'rotate(45deg)', background: '#FEF08A', border: '1.5px solid #F59E0B' }} />
+            {/* Routine Persistent Heat */}
+            <div className="flex items-start gap-2.5">
+              <div className="w-3.5 h-3.5 rounded-full bg-indigo-950 border-2 border-indigo-400 shadow-[0_0_6px_#818cf8] shrink-0 mt-0.5" />
               <div>
-                <strong style={{ color: '#FEF08A', fontSize: '10px' }}>Peak FRP Observation</strong>
-                <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>Highest radiative intensity point</div>
+                <strong className="text-indigo-300">Persistent Thermal Source</strong>
+                <div className="text-[10px] text-slate-400 font-sans">Flaring stack/kiln with baseline history</div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FCD34D', border: '1px solid #F59E0B' }} />
-              <span style={{ fontSize: '10px' }}><strong>Yellow Dot:</strong> Spaceborne Sensor Detection</span>
+            {/* Non-Industrial / Agricultural */}
+            <div className="flex items-start gap-2.5">
+              <div className="w-3.5 h-3.5 rounded-full bg-amber-950 border-2 border-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <strong className="text-amber-400">Non-Industrial / Agricultural</strong>
+                <div className="text-[10px] text-slate-400 font-sans">Crop stubble fire outside boundary (&gt;500m)</div>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '14px', height: '8px', border: '1.5px dashed #06B6D4', backgroundColor: 'rgba(6,182,212,0.15)' }} />
-              <span style={{ fontSize: '10px' }}><strong>Cyan Box:</strong> OSM Industrial Facility</span>
-            </div>
+            <div className="border-t border-white/[0.08] pt-2 space-y-2">
+              {/* Event Spatial Extent */}
+              <div className="flex items-start gap-2.5">
+                <div className="w-4 h-3 border border-dashed border-amber-400 bg-amber-500/20 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-amber-300 text-[10px]">Observation Spatial Extent</strong>
+                  <div className="text-[9px] text-slate-400 font-sans">Convex hull multi-pass spread (km²)</div>
+                </div>
+              </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '14px', height: '8px', border: '1px solid #EF4444', backgroundColor: 'rgba(239,68,68,0.25)' }} />
-              <span style={{ fontSize: '10px' }}><strong>Red Cone:</strong> Downwind Toxic Hazard Plume</span>
-            </div>
+              {/* Peak FRP */}
+              <div className="flex items-start gap-2.5">
+                <div className="w-3 h-3 rotate-45 bg-yellow-200 border border-amber-500 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-yellow-200 text-[10px]">Peak FRP Observation</strong>
+                  <div className="text-[9px] text-slate-400 font-sans">Highest radiative intensity point</div>
+                </div>
+              </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '14px', height: '8px', border: '1.5px dashed #94A3B8', backgroundColor: 'rgba(255,255,255,0.05)' }} />
-              <span style={{ fontSize: '10px' }}><strong>White Box:</strong> 375m VIIRS Ground Pixel</span>
+              {/* OSM Industrial Facility */}
+              <div className="flex items-start gap-2.5">
+                <div className="w-4 h-2.5 border border-cyan-400 bg-cyan-500/20 shrink-0 mt-0.5" />
+                <span className="text-[10px] text-slate-300">
+                  <strong className="text-cyan-300">Cyan Box:</strong> OSM Industrial Facility
+                </span>
+              </div>
+
+              {/* Estimated Downwind Screening Zone */}
+              <div className="flex items-start gap-2.5">
+                <div className="w-4 h-2.5 border border-dashed border-red-500 bg-red-500/20 shrink-0 mt-0.5" />
+                <span className="text-[10px] text-slate-300">
+                  <strong className="text-red-400">Red Envelope:</strong> Estimated Downwind Screening Zone
+                </span>
+              </div>
+
+              {/* VIIRS 375m Sensor Footprint */}
+              <div className="flex items-start gap-2.5">
+                <div className="w-4 h-2.5 border border-dashed border-slate-300 bg-white/10 shrink-0 mt-0.5" />
+                <span className="text-[10px] text-slate-300">
+                  <strong className="text-slate-200">White Box:</strong> 375m VIIRS Ground Footprint
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -106,3 +110,5 @@ export const MapLegend: React.FC = () => {
     </div>
   );
 };
+
+export default MapLegend;

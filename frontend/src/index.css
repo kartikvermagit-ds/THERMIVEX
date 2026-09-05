@@ -1,3 +1,4 @@
+@import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
 :root {
@@ -36,6 +37,17 @@ body {
 
 .font-mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Fix browser autofill turning inputs white */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #020712 inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #38bdf8 !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Custom Tactical Scrollbars */
@@ -201,54 +213,145 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 40px 36px;
-  min-width: 320px;
-  border: 1px solid #243145;
-  border-radius: 14px;
-  background: rgba(10, 14, 22, 0.78);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  animation: content-float 4s ease-in-out infinite;
+  gap: 16px;
+  padding: 56px 52px;
+  min-width: 480px;
+  max-width: 560px;
+  width: 90%;
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 24px;
+  background: rgba(8, 13, 22, 0.85);
+  box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.85), 0 0 50px -15px rgba(14, 165, 233, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  animation: content-float 5s ease-in-out infinite;
 }
 
 .login-screen__badge {
-  letter-spacing: 0.12em;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  background: rgba(14, 165, 233, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   font-size: 11px;
-  color: #94a3b8;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.login-screen__badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+  animation: pulse-beacon 2s ease-in-out infinite;
+}
+
+@keyframes pulse-beacon {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 1;
+    box-shadow: 0 0 14px #38bdf8;
+  }
+}
+
+.login-screen__title-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 6px 0;
 }
 
 .login-screen__title {
-  font-size: 36px;
-  letter-spacing: 0.1em;
-  color: #f8fafc;
+  font-size: clamp(44px, 5.5vw, 58px);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #ffffff;
+  text-shadow: 0 0 30px rgba(56, 189, 248, 0.45);
+  line-height: 1.1;
+  user-select: none;
 }
 
 .login-screen__subtitle {
-  font-size: 14px;
+  font-size: 15px;
   color: #94a3b8;
-  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.login-screen__action-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
 }
 
 .login-screen__button {
-  border: 1px solid #06b6d4;
-  border-radius: 10px;
-  background: linear-gradient(90deg, #0e7490, #2563eb);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  min-width: 140px;
+  padding: 0 28px;
+  border-radius: 9999px;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: #090d16;
   color: #f8fafc;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.04em;
-  padding: 10px 26px;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(14, 165, 233, 0.15);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .login-screen__button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.45);
+  transform: translateY(-2px);
+  background: #111827;
+  border-color: #38bdf8;
+  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
 }
 
 .login-screen__button:focus-visible {
-  outline: 2px solid #67e8f9;
-  outline-offset: 2px;
+  outline: 2px solid #38bdf8;
+  outline-offset: 3px;
 }
+
+.login-screen__button--confirm {
+  background: linear-gradient(135deg, #0e7490, #2563eb);
+  border-color: #67e8f9;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.6);
+}
+
+.login-screen__button--confirm:hover {
+  box-shadow: 0 0 35px rgba(56, 189, 248, 0.8);
+}
+
+.login-screen__button--entering {
+  background: #059669;
+  border-color: #34d399;
+  box-shadow: 0 0 30px rgba(52, 211, 153, 0.7);
+}
+
+.login-screen__hint {
+  font-size: 12px;
+  color: #64748b;
+  letter-spacing: 0.04em;
+  transition: color 0.2s ease;
+}
+
+/* Fallback utilities for TextRoll / TextMorph snippets */
+.text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+.text-5xl { font-size: 3rem; line-height: 1; }
+.text-black { color: #000000; }
+.dark .text-white { color: #ffffff; }
+

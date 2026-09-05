@@ -1,5 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, HelpCircle, Radio, FileText, Download, Map, Info, Bell, BellOff } from 'lucide-react';
+import { 
+  RefreshCw, 
+  HelpCircle, 
+  Radio, 
+  FileText, 
+  Download, 
+  Map, 
+  Info, 
+  Bell, 
+  BellOff,
+  Sparkles,
+  ChevronDown,
+  Zap
+} from 'lucide-react';
 import { ThermivexLogo } from './ThermivexLogo';
 import type { DashboardStats, ScenarioItem } from '../types/incident';
 import { getSitRepMarkdownUrl, getSitRepPdfUrl, getGeoJsonExportUrl } from '../services/api';
@@ -7,8 +20,8 @@ import { getSitRepMarkdownUrl, getSitRepPdfUrl, getGeoJsonExportUrl } from '../s
 interface TopNavProps {
   stats: DashboardStats | null;
   scenarios: ScenarioItem[];
-  currentTab: 'map' | 'about';
-  onSelectTab: (tab: 'map' | 'about') => void;
+  currentTab: 'map' | 'about' | 'events';
+  onSelectTab: (tab: 'map' | 'about' | 'events') => void;
   onTriggerScenario: (scenarioId: string) => void;
   onRefresh: () => void;
   onOpenGuide: () => void;
@@ -18,7 +31,7 @@ interface TopNavProps {
 }
 
 export const TopNav: React.FC<TopNavProps> = ({
-  stats,
+  stats: _stats,
   scenarios,
   currentTab,
   onSelectTab,
@@ -30,6 +43,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   onToggleSound
 }) => {
   const [timeStr, setTimeStr] = useState<string>('');
+  const [isOpsOpen, setIsOpsOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const updateTime = () => {
@@ -42,294 +56,194 @@ export const TopNav: React.FC<TopNavProps> = ({
   }, []);
 
   return (
-    <header style={{
-      height: '52px',
-      backgroundColor: '#090D14',
-      borderBottom: '1px solid #1E2633',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 16px',
-      zIndex: 1000
-    }}>
-      {/* Brand & Navigation Tabs */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <div style={{ cursor: 'pointer' }} onClick={() => onSelectTab('map')}>
+    <header className="relative z-[500] h-13 bg-[#030a14]/90 border-b border-cyan-500/20 backdrop-blur-xl px-4 flex items-center justify-between text-white select-none">
+      {/* 1. Left: Brand & Navigation */}
+      <div className="flex items-center gap-6">
+        <div 
+          className="cursor-pointer flex items-center gap-3 transition-opacity hover:opacity-90"
+          onClick={() => onSelectTab('map')}
+        >
           <ThermivexLogo size={32} showSubtitle={true} />
         </div>
 
-        {/* View Switcher: Live Map vs About & Science */}
-        <div style={{ display: 'flex', gap: '4px', backgroundColor: '#0F141C', padding: '3px', borderRadius: '5px', border: '1px solid #1E2633' }}>
+        {/* Primary View Switcher Tabs */}
+        <nav className="flex items-center gap-1 bg-[#040e1c] p-1 rounded-lg border border-white/10 font-mono text-xs">
           <button
             onClick={() => onSelectTab('map')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              padding: '4px 10px',
-              borderRadius: '4px',
-              border: 'none',
-              backgroundColor: currentTab === 'map' ? '#161F2E' : 'transparent',
-              color: currentTab === 'map' ? '#38BDF8' : '#94A3B8',
-              fontWeight: 700,
-              fontSize: '11px',
-              cursor: 'pointer',
-              transition: 'all 0.15s ease'
-            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-bold transition-all ${
+              currentTab === 'map'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
+                : 'text-slate-400 hover:text-slate-200 border border-transparent'
+            }`}
           >
-            <Map size={12} />
-            <span>Tactical Map</span>
+            <Map className="w-3.5 h-3.5 text-cyan-400" />
+            <span>TACTICAL MAP</span>
+          </button>
+
+          <button
+            onClick={() => onSelectTab('events')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-bold transition-all ${
+              currentTab === 'events'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                : 'text-slate-400 hover:text-slate-200 border border-transparent'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>THERMAL EVENTS</span>
           </button>
 
           <button
             onClick={() => onSelectTab('about')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              padding: '4px 10px',
-              borderRadius: '4px',
-              border: 'none',
-              backgroundColor: currentTab === 'about' ? '#161F2E' : 'transparent',
-              color: currentTab === 'about' ? '#38BDF8' : '#94A3B8',
-              fontWeight: 700,
-              fontSize: '11px',
-              cursor: 'pointer',
-              transition: 'all 0.15s ease'
-            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-bold transition-all ${
+              currentTab === 'about'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
+                : 'text-slate-400 hover:text-slate-200 border border-transparent'
+            }`}
           >
-            <Info size={12} />
-            <span>About & Science</span>
+            <Info className="w-3.5 h-3.5 text-cyan-400" />
+            <span>ABOUT &amp; SCIENCE</span>
           </button>
-        </div>
+        </nav>
       </div>
 
-      {/* Sensor Stream Telemetry & Triage Counts */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          fontSize: '11px',
-          color: '#94A3B8',
-          backgroundColor: '#0F141C',
-          padding: '3px 8px',
-          borderRadius: '4px',
-          border: '1px solid #1E2633'
-        }}>
-          <Radio size={12} color="#10B981" />
-          <span className="font-mono" style={{ fontSize: '10px' }}>VIIRS/MODIS: CONNECTED</span>
+      {/* 2. Right: Satellite Link, Status & Operations Group */}
+      <div className="flex items-center gap-3 font-mono text-xs">
+        {/* Live Satellite Stream Telemetry */}
+        <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#040e1c] border border-white/10 text-[11px] text-slate-300">
+          <Radio className="w-3.5 h-3.5 text-cyan-400" />
+          <span>DATA LINK: <strong className="text-cyan-300">VIIRS &bull; MODIS</strong></span>
+          <span className="text-white/20">|</span>
+          <span className="text-slate-400">NASA FIRMS</span>
         </div>
 
-        {stats && (
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <div style={{
-              padding: '2px 8px',
-              borderRadius: '3px',
-              backgroundColor: '#1C1215',
-              border: '1px solid #7F1D1D',
-              fontSize: '11px',
-              color: '#F87171',
-              fontWeight: 600
-            }}>
-              CRITICAL: {stats.critical_disasters}
-            </div>
-            <div style={{
-              padding: '2px 8px',
-              borderRadius: '3px',
-              backgroundColor: '#14142B',
-              border: '1px solid #3730A3',
-              fontSize: '11px',
-              color: '#A5B4FC',
-              fontWeight: 600
-            }}>
-              ROUTINE: {stats.routine_flaring}
-            </div>
-            <div style={{
-              padding: '2px 8px',
-              borderRadius: '3px',
-              backgroundColor: '#0F1A14',
-              border: '1px solid #065F46',
-              fontSize: '11px',
-              color: '#34D399',
-              fontWeight: 600
-            }}>
-              SUPPRESSED: {stats.suppressed_false_positives}
-            </div>
-          </div>
-        )}
-      </div>
+        {/* System Online Badge */}
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#040e1c] border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.15)]">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400 shadow-[0_0_6px_#34d399]" />
+          </span>
+          <span className="text-[10px] font-bold tracking-widest text-emerald-300 uppercase">
+            SYSTEM ONLINE
+          </span>
+        </div>
 
-      {/* Action Controls & Export Links */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {/* Audible Siren Alert Toggle */}
+        {/* Tactical Siren Audio Toggle */}
         <button
           onClick={onToggleSound}
-          title={soundEnabled ? 'Mute Tactical Siren Audio' : 'Enable Tactical Siren Audio'}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            backgroundColor: '#141A24',
-            border: soundEnabled ? '1px solid #38BDF8' : '1px solid #232B3B',
-            color: soundEnabled ? '#38BDF8' : '#64748B',
-            padding: '5px 8px',
-            borderRadius: '4px',
-            fontSize: '11px',
-            cursor: 'pointer',
-            transition: 'all 0.1s ease'
-          }}
+          title={soundEnabled ? 'Mute Tactical Audio Alarm' : 'Enable Tactical Audio Alarm'}
+          className={`p-1.5 rounded-lg border transition-all ${
+            soundEnabled 
+              ? 'bg-cyan-950/40 border-cyan-500/40 text-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.2)]' 
+              : 'bg-[#040e1c] border-white/10 text-slate-500 hover:text-slate-300'
+          }`}
         >
-          {soundEnabled ? <Bell size={13} /> : <BellOff size={13} />}
+          {soundEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
         </button>
 
-        <a
-          href={getSitRepPdfUrl()}
-          download="THERMIVEX_National_SitRep.pdf"
-          title="Export 24-Hour Situation Report (Tactical PDF)"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            backgroundColor: 'rgba(239, 68, 68, 0.12)',
-            border: '1px solid rgba(239, 68, 68, 0.4)',
-            color: '#FCA5A5',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '11px',
-            fontWeight: 600,
-            textDecoration: 'none',
-            transition: 'all 0.1s ease'
-          }}
-        >
-          <FileText size={12} color="#EF4444" />
-          <span>SitRep PDF</span>
-        </a>
-
-        <a
-          href={getSitRepMarkdownUrl()}
-          download="THERMIVEX_National_SitRep.md"
-          title="Export 24-Hour Situation Report (Markdown)"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            backgroundColor: '#141A24',
-            border: '1px solid #232B3B',
-            color: '#94A3B8',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '11px',
-            fontWeight: 600,
-            textDecoration: 'none',
-            transition: 'all 0.1s ease'
-          }}
-        >
-          <FileText size={12} color="#38BDF8" />
-          <span>SitRep MD</span>
-        </a>
-
-        <a
-          href={getGeoJsonExportUrl()}
-          download="thermivex_incidents.geojson"
-          title="Export GeoJSON for QGIS / ArcGIS"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            backgroundColor: '#141A24',
-            border: '1px solid #232B3B',
-            color: '#94A3B8',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '11px',
-            fontWeight: 600,
-            textDecoration: 'none',
-            transition: 'all 0.1s ease'
-          }}
-        >
-          <Download size={12} color="#10B981" />
-          <span>GeoJSON</span>
-        </a>
-
-        <button
-          onClick={onOpenGuide}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            backgroundColor: '#141A24',
-            border: '1px solid #232B3B',
-            color: '#94A3B8',
-            padding: '4px 9px',
-            borderRadius: '4px',
-            fontSize: '11px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            transition: 'all 0.1s ease'
-          }}
-        >
-          <HelpCircle size={12} />
-          <span>Guide</span>
-        </button>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <select 
-            style={{
-              backgroundColor: '#141A24',
-              color: '#E2E8F0',
-              border: '1px solid #232B3B',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              fontSize: '11px',
-              cursor: 'pointer',
-              outline: 'none'
-            }}
-            onChange={(e) => {
-              if (e.target.value) {
-                onTriggerScenario(e.target.value);
-                e.target.value = '';
-              }
-            }}
-            disabled={isSimulating}
+        {/* Operations Dropdown / Button Group */}
+        <div className="relative">
+          <button
+            onClick={() => setIsOpsOpen(!isOpsOpen)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#040e1c] hover:bg-[#071529] border border-cyan-500/30 text-cyan-300 font-bold transition-all shadow-[0_0_10px_rgba(6,182,212,0.15)]"
           >
-            <option value="">⚡ Test Scenarios...</option>
-            {scenarios.map((sc) => (
-              <option key={sc.scenario_id} value={sc.scenario_id}>
-                {sc.title}
-              </option>
-            ))}
-          </select>
+            <Zap className="w-3.5 h-3.5 text-cyan-400" />
+            <span>OPERATIONS</span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpsOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* Operations Menu Overlay */}
+          {isOpsOpen && (
+            <div 
+              className="absolute right-0 top-full mt-1.5 w-64 p-2 rounded-xl bg-[#030a14]/95 border border-cyan-500/30 backdrop-blur-2xl shadow-2xl space-y-1.5 z-[600]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-white/[0.08]">
+                EXPORT SITREPS &amp; GEODATA
+              </div>
+
+              <a
+                href={getSitRepPdfUrl()}
+                download="THERMIVEX_SitRep.pdf"
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-red-950/40 border border-transparent hover:border-red-500/40 text-red-300 text-xs transition-colors"
+                onClick={() => setIsOpsOpen(false)}
+              >
+                <FileText className="w-3.5 h-3.5 text-red-400" />
+                <span>SitRep PDF (Tactical)</span>
+              </a>
+
+              <a
+                href={getSitRepMarkdownUrl()}
+                download="THERMIVEX_SitRep.md"
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-cyan-950/40 border border-transparent hover:border-cyan-500/40 text-slate-200 text-xs transition-colors"
+                onClick={() => setIsOpsOpen(false)}
+              >
+                <FileText className="w-3.5 h-3.5 text-cyan-400" />
+                <span>SitRep Markdown</span>
+              </a>
+
+              <a
+                href={getGeoJsonExportUrl()}
+                download="thermivex_incidents.geojson"
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-emerald-950/40 border border-transparent hover:border-emerald-500/40 text-emerald-300 text-xs transition-colors"
+                onClick={() => setIsOpsOpen(false)}
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-400" />
+                <span>GeoJSON Export (QGIS/GIS)</span>
+              </a>
+
+              <div className="px-2 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-t border-white/[0.08]">
+                SCENARIOS &amp; SIMULATION
+              </div>
+
+              <select
+                className="w-full bg-[#020712] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 outline-none focus:border-cyan-500/50 cursor-pointer"
+                onChange={(e) => {
+                  if (e.target.value) {
+                    onTriggerScenario(e.target.value);
+                    e.target.value = '';
+                    setIsOpsOpen(false);
+                  }
+                }}
+                disabled={isSimulating}
+              >
+                <option value="">⚡ Test Scenarios...</option>
+                {scenarios.map((sc) => (
+                  <option key={sc.scenario_id} value={sc.scenario_id}>
+                    {sc.title}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                onClick={() => {
+                  onOpenGuide();
+                  setIsOpsOpen(false);
+                }}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-slate-300 text-xs transition-colors"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-cyan-400" />
+                <span>System Guide &amp; Protocol</span>
+              </button>
+            </div>
+          )}
         </div>
 
+        {/* Refresh Feed */}
         <button
           onClick={onRefresh}
           title="Refresh Feed"
-          style={{
-            background: '#141A24',
-            border: '1px solid #232B3B',
-            color: '#94A3B8',
-            padding: '5px 7px',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center'
-          }}
+          className="p-1.5 rounded-lg bg-[#040e1c] hover:bg-[#071529] border border-white/10 text-slate-300 hover:text-cyan-300 transition-colors"
         >
-          <RefreshCw size={12} />
+          <RefreshCw className="w-4 h-4" />
         </button>
 
-        <div className="font-mono" style={{
-          fontSize: '11px',
-          color: '#38BDF8',
-          backgroundColor: '#0F141C',
-          padding: '4px 8px',
-          borderRadius: '4px',
-          border: '1px solid #1E2633'
-        }}>
+        {/* UTC Clock */}
+        <div className="hidden lg:block px-3 py-1.5 rounded-lg bg-[#040e1c] border border-white/10 text-cyan-300 font-bold text-[11px]">
           {timeStr}
         </div>
       </div>
     </header>
   );
 };
+
+export default TopNav;

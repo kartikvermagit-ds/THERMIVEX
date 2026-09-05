@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { TopNav } from './components/TopNav';
 import { TriageRail } from './components/TriageRail';
 import { MapCanvas } from './components/MapCanvas';
+import { EventIntelligencePanel } from './components/EventIntelligencePanel';
 import { EvidenceDrawer } from './components/EvidenceDrawer';
 import { ThermalEventDrawer } from './components/ThermalEventDrawer';
+import { BottomTelemetryBar } from './components/BottomTelemetryBar';
 import { LayerControl } from './components/LayerControl';
 import { CorridorBar } from './components/CorridorBar';
-import { TimelineScrubber } from './components/TimelineScrubber';
 import { MapLegend } from './components/MapLegend';
 import { SystemGuideModal } from './components/SystemGuideModal';
 import { AboutPage } from './components/AboutPage';
-import { ClimateSlideStrip } from './components/ClimateSlideStrip';
 import { NoiseBackgroundDemo } from './components/NoiseBackgroundDemo';
+import { Satellite } from 'lucide-react';
 import type { 
   IncidentFeature, 
   FacilityFeature, 
@@ -19,7 +20,6 @@ import type {
   DashboardStats, 
   InvestigationDossier 
 } from './types/incident';
-import type { ClimateUpdateItem, ClimateQuickStats } from './types/climate';
 import type { ThermalEvent, EventTimelineResponse, LatestClusteringRun } from './types/event';
 import { 
   fetchIncidentFeed, 
@@ -27,9 +27,9 @@ import {
   fetchDashboardStats, 
   fetchScenarios, 
   fetchInvestigationDossier,
-  simulateScenario 
+  simulateScenario,
+  dispatchAlert 
 } from './services/api';
-import { fetchClimateFeed, DEFAULT_CLIMATE_UPDATES } from './services/climateService';
 import { 
   fetchThermalEvents, 
   fetchThermalEventDetail, 
@@ -46,34 +46,33 @@ export const App: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [scenarios, setScenarios] = useState<ScenarioItem[]>([]);
   
-  const [currentTab, setCurrentTab] = useState<'map' | 'about'>('map');
+  // Navigation & View Mode
+  const [currentTab, setCurrentTab] = useState<'map' | 'about' | 'events'>('map');
+  const [railTab, setRailTab] = useState<'incidents' | 'events'>('incidents');
+
+  // Selected State
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
   const [activeDossier, setActiveDossier] = useState<InvestigationDossier | null>(null);
+  const [showFullDossierModal, setShowFullDossierModal] = useState<boolean>(false);
 
   // Phase 2 Thermal Event States
   const [selectedThermalEventId, setSelectedThermalEventId] = useState<string | null>(null);
   const [selectedThermalEvent, setSelectedThermalEvent] = useState<ThermalEvent | null>(null);
+  const [showThermalDrawer, setShowThermalDrawer] = useState<boolean>(false);
   const [eventTimeline, setEventTimeline] = useState<EventTimelineResponse | null>(null);
   const [isLoadingTimeline, setIsLoadingTimeline] = useState<boolean>(false);
   const [isClusteringLoading, setIsClusteringLoading] = useState<boolean>(false);
   const [latestClusteringRun, setLatestClusteringRun] = useState<LatestClusteringRun | null>(null);
 
+  // Dispatch simulation state
+  const [isDispatching, setIsDispatching] = useState<boolean>(false);
+  const [dispatchStatus, setDispatchStatus] = useState<string | null>(null);
+
   const [flyToCoords, setFlyToCoords] = useState<[number, number] | null>(null);
   const [flyToZoom, setFlyToZoom] = useState<number>(15);
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
-  const [selectedPassTime, setSelectedPassTime] = useState<string>('all');
   const [isGuideOpen, setIsGuideOpen] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const [climateUpdates, setClimateUpdates] = useState<ClimateUpdateItem[]>(DEFAULT_CLIMATE_UPDATES);
-  const [climateQuickStats, setClimateQuickStats] = useState<ClimateQuickStats>({
-    windSpeedKmh: 16.4,
-    windBearing: 'NW (315°)',
-    totalEstCo2eFluxTph: 41.8,
-    ch4RegionalPpb: 1918,
-    maxFRPAnomalyMw: 24.5,
-    activePlumesCount: 3,
-    glintSuppressionPct: 100
-  });
 
   const [layersVisible, setLayersVisible] = useState({
     hotspots: true,
@@ -91,7 +90,6 @@ export const App: React.FC = () => {
       if (!AudioContextClass) return;
       const ctx = new AudioContextClass();
 
-      // First beep (880 Hz)
       const osc1 = ctx.createOscillator();
       const gain1 = ctx.createGain();
       osc1.type = 'sine';
@@ -103,7 +101,6 @@ export const App: React.FC = () => {
       osc1.start();
       osc1.stop(ctx.currentTime + 0.12);
 
-      // Second beep (1320 Hz)
       const osc2 = ctx.createOscillator();
       const gain2 = ctx.createGain();
       osc2.type = 'sine';
@@ -140,11 +137,6 @@ export const App: React.FC = () => {
       setScenarios(scenRes);
       setThermalEvents(eventsRes.events || []);
       setLatestClusteringRun(latestRunRes);
-
-      // Load synthesized / real-time climate telemetry feed
-      const climateRes = await fetchClimateFeed(feedRes.features, statsRes);
-      setClimateUpdates(climateRes.updates);
-      setClimateQuickStats(climateRes.quickStats);
     } catch (err) {
       console.error('Failed to load initial data:', err);
     }
@@ -158,9 +150,9 @@ export const App: React.FC = () => {
 
   const handleSelectIncident = async (id: string) => {
     setSelectedIncidentId(id);
-    // Dismiss thermal event drawer if open to avoid panel collisions
     setSelectedThermalEvent(null);
     setSelectedThermalEventId(null);
+    setShowThermalDrawer(false);
     setEventTimeline(null);
 
     try {
@@ -175,9 +167,9 @@ export const App: React.FC = () => {
 
   const handleSelectThermalEvent = async (id: string) => {
     setSelectedThermalEventId(id);
-    // Dismiss incident dossier if open
     setSelectedIncidentId(null);
     setActiveDossier(null);
+    setShowFullDossierModal(false);
 
     const localEv = thermalEvents.find(e => e.id === id);
     if (localEv) {
@@ -218,6 +210,21 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleSimulateDispatch = async () => {
+    if (!selectedIncidentId) return;
+    setIsDispatching(true);
+    try {
+      await dispatchAlert(selectedIncidentId, "MIDC_EMERGENCY_DISPATCH_DESK");
+      setDispatchStatus("DISPATCH SIMULATION TRANSMITTED TO LOCAL FOAM TENDERS (SIMULATION LOGGED)");
+      setTimeout(() => setDispatchStatus(null), 6000);
+      playTacticalAlertChime();
+    } catch (err) {
+      setDispatchStatus("DISPATCH TRANSMISSION FAILED");
+    } finally {
+      setIsDispatching(false);
+    }
+  };
+
   const handleLocateIncident = (coords: [number, number]) => {
     setFlyToZoom(14.5);
     setFlyToCoords(coords);
@@ -251,23 +258,34 @@ export const App: React.FC = () => {
     }));
   };
 
-  const displayIncidents = incidents.filter((inc) => {
-    if (selectedPassTime === 'all') return true;
-    return inc.properties.acq_time.startsWith(selectedPassTime.substring(0, 2));
-  });
+  const handleTopNavTab = (tab: 'map' | 'about' | 'events') => {
+    setCurrentTab(tab);
+    if (tab === 'events') {
+      setRailTab('events');
+      setLayersVisible(prev => ({ ...prev, thermalEvents: true }));
+      if (thermalEvents.length > 0 && !selectedThermalEventId) {
+        handleSelectThermalEvent(thermalEvents[0].id);
+      }
+    } else if (tab === 'map') {
+      setRailTab('incidents');
+    }
+  };
+
+  const selectedIncidentFeature = incidents.find(i => i.properties.id === selectedIncidentId) || null;
+  const isItemSelected = !!selectedIncidentFeature || !!selectedThermalEvent;
 
   if (showLogin) {
     return <NoiseBackgroundDemo onContinue={() => setShowLogin(false)} />;
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden' }}>
-      {/* Top Mission Control Bar with Navigation Tabs & Sound Toggle */}
+    <div className="flex flex-col w-screen h-screen overflow-hidden bg-[#050b14] text-slate-100 select-none">
+      {/* 1. Top Command Header (50px) */}
       <TopNav
         stats={stats}
         scenarios={scenarios}
         currentTab={currentTab}
-        onSelectTab={setCurrentTab}
+        onSelectTab={handleTopNavTab}
         onTriggerScenario={handleTriggerScenario}
         onRefresh={loadData}
         onOpenGuide={() => setIsGuideOpen(true)}
@@ -276,16 +294,19 @@ export const App: React.FC = () => {
         onToggleSound={() => setSoundEnabled(!soundEnabled)}
       />
 
-      {/* Main Content Area */}
+      {/* 2. Main Workspace Layout */}
       {currentTab === 'about' ? (
-        <AboutPage onBackToMap={() => setCurrentTab('map')} />
+        <AboutPage onBackToMap={() => handleTopNavTab('map')} />
       ) : (
-        <div style={{ display: 'flex', flex: 1, position: 'relative', overflow: 'hidden' }}>
+        <div className="flex flex-1 relative overflow-hidden">
+          {/* Left Incident / Event Triage Rail (340–360px) */}
           <TriageRail
-            incidents={displayIncidents}
+            incidents={incidents}
             thermalEvents={thermalEvents}
             selectedIncidentId={selectedIncidentId}
             selectedThermalEventId={selectedThermalEventId}
+            activeTab={railTab}
+            onTabChange={setRailTab}
             onSelectIncident={handleSelectIncident}
             onSelectThermalEvent={handleSelectThermalEvent}
             onLocateIncident={handleLocateIncident}
@@ -298,7 +319,8 @@ export const App: React.FC = () => {
             latestClusteringRun={latestClusteringRun}
           />
 
-          <div style={{ flex: 1, position: 'relative', height: '100%' }}>
+          {/* Center Map Hero (dominant workspace, flex: 1) */}
+          <main className="flex-1 relative h-full">
             {/* Layer Control Pill Strip */}
             <LayerControl
               layers={layersVisible}
@@ -310,9 +332,9 @@ export const App: React.FC = () => {
               onFlyTo={handleFlyToCorridor}
             />
 
-            {/* Main Leaflet/Esri Map */}
+            {/* Main Satellite Basemap & Vector Overlays */}
             <MapCanvas
-              incidents={displayIncidents}
+              incidents={incidents}
               facilities={facilities}
               thermalEvents={thermalEvents}
               selectedIncidentId={selectedIncidentId}
@@ -324,35 +346,45 @@ export const App: React.FC = () => {
               layersVisible={layersVisible}
             />
 
-            {/* Tactical Map Guide / Legend */}
+            {/* Floating Map Legend Button (bottom-left) */}
             <MapLegend />
 
-            {/* Temporal Timeline Scrubber Bar */}
-            <TimelineScrubber
-              selectedPassTime={selectedPassTime}
-              onSelectPassTime={setSelectedPassTime}
-            />
+            {/* Subtle Floating Prompt when nothing is selected */}
+            {!isItemSelected && (
+              <div className="hidden lg:flex absolute top-4 right-4 z-[350] items-center gap-2.5 px-3.5 py-2 rounded-lg bg-[#050b14]/85 border border-cyan-500/25 backdrop-blur-md text-xs font-mono text-slate-300 shadow-xl pointer-events-none">
+                <Satellite className="w-4 h-4 text-cyan-400 animate-pulse" />
+                <span>SELECT AN EVENT OR INCIDENT TO INSPECT INTELLIGENCE</span>
+              </div>
+            )}
 
-            {/* Real-Time Climate & Atmospheric Intelligence Slide Strip */}
-            <ClimateSlideStrip
-              updates={climateUpdates}
-              quickStats={climateQuickStats}
-              onFlyToCorridor={handleFlyToCorridor}
+            {/* Right-Side Event Intelligence Panel (Overlay Drawer when selected) */}
+            <EventIntelligencePanel
+              selectedIncident={selectedIncidentFeature}
+              selectedDossier={activeDossier}
+              selectedThermalEvent={selectedThermalEvent}
+              onClose={() => {
+                setSelectedIncidentId(null);
+                setActiveDossier(null);
+                setSelectedThermalEvent(null);
+                setSelectedThermalEventId(null);
+              }}
+              onOpenFullDossier={() => setShowFullDossierModal(true)}
+              onOpenThermalDrawer={() => setShowThermalDrawer(true)}
+              onSimulateDispatch={handleSimulateDispatch}
+              isDispatching={isDispatching}
+              dispatchStatus={dispatchStatus}
             />
-          </div>
+          </main>
 
-          {/* Slide-over Thermal Event Intelligence Drawer */}
-          {selectedThermalEvent && (
+          {/* Deep Thermal Event Timeline Drawer */}
+          {showThermalDrawer && selectedThermalEvent && (
             <ThermalEventDrawer
               event={selectedThermalEvent}
               timeline={eventTimeline}
               isLoadingTimeline={isLoadingTimeline}
-              onClose={() => {
-                setSelectedThermalEvent(null);
-                setSelectedThermalEventId(null);
-                setEventTimeline(null);
-              }}
+              onClose={() => setShowThermalDrawer(false)}
               onInspectCorrelatedIncident={(title) => {
+                setShowThermalDrawer(false);
                 const matched = incidents.find(i => 
                   title && i.properties.facility_name && (
                     title.toLowerCase().includes(i.properties.facility_name.toLowerCase()) ||
@@ -368,20 +400,24 @@ export const App: React.FC = () => {
             />
           )}
 
-          {/* Slide-over Evidence Investigation Drawer */}
-          {activeDossier && (
+          {/* Deep Evidence Dossier Drawer (TreeSHAP & Gaussian Plume Analysis) */}
+          {showFullDossierModal && activeDossier && (
             <EvidenceDrawer
               dossier={activeDossier}
-              onClose={() => {
-                setActiveDossier(null);
-                setSelectedIncidentId(null);
-              }}
+              onClose={() => setShowFullDossierModal(false)}
             />
           )}
         </div>
       )}
 
-      {/* How It Works / System Guide Modal */}
+      {/* 3. Operational Bottom Telemetry Strip (36px) */}
+      <BottomTelemetryBar
+        stats={stats}
+        totalObservations={incidents.length > 0 ? incidents.length * 31 : 124}
+        totalEvents={thermalEvents.length}
+      />
+
+      {/* System Guide Modal */}
       <SystemGuideModal
         isOpen={isGuideOpen}
         onClose={() => setIsGuideOpen(false)}

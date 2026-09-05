@@ -46,7 +46,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   const [cursorCoords, setCursorCoords] = useState<{ lat: number; lng: number } | null>(null);
   const lastMouseMoveRef = useRef<number>(0);
 
-  // Initialize Map with High-Performance Zero-Lag Options
+  // Initialize Map with High-Performance Canvas & Smooth Navigation
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
@@ -58,31 +58,31 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       maxZoom: 19,
       zoomControl: false,
       attributionControl: false,
-      preferCanvas: true,            // GPU HTML5 2D Canvas rendering for zero-lag vector zooming
+      preferCanvas: true,
       zoomAnimation: true,
       zoomAnimationThreshold: 8,
       fadeAnimation: true,
       markerZoomAnimation: true,
-      wheelDebounceTime: 80,         // Prevents scroll wheel rapid-fire tile thrashing
-      wheelPxPerZoomLevel: 120       // Buttery smooth trackpad and mousewheel zoom steps
+      wheelDebounceTime: 80,
+      wheelPxPerZoomLevel: 120
     });
 
-    // High-Resolution Satellite Photorealistic Basemap (Esri World Imagery) with performance buffering
+    // High-Resolution Satellite Basemap (Esri World Imagery)
     const satelliteTile = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 19,
-      updateWhenZooming: false,      // Do NOT recalculate tiles mid-animation
-      updateWhenIdle: true,         // Fetch only after zoom completes
-      keepBuffer: 6,                // Cache surrounding tiles to eliminate grey flash
+      updateWhenZooming: false,
+      updateWhenIdle: true,
+      keepBuffer: 6,
       attribution: 'Esri, Maxar, Earthstar Geographics'
     });
 
-    // High-Contrast Labels Layer for Borders & Cities
+    // High-Contrast Reference Labels Layer
     const labelsTile = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 19,
       updateWhenZooming: false,
       updateWhenIdle: true,
       keepBuffer: 6,
-      opacity: 0.9
+      opacity: 0.85
     });
 
     satelliteTile.addTo(map);
@@ -90,12 +90,11 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     baseTilesRef.current = satelliteTile;
     labelsTilesRef.current = labelsTile;
 
-    // Tactical Metric Scale Bar (meters / kilometers)
+    // Tactical Metric Scale Bar
     L.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
-
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    // Throttled Cursor Coordinates HUD (100ms throttle to prevent React re-render lag during zoom)
+    // Throttled Cursor Coordinates HUD
     map.on('mousemove', (e: L.LeafletMouseEvent) => {
       const now = Date.now();
       if (now - lastMouseMoveRef.current > 100) {
@@ -121,7 +120,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     };
   }, []);
 
-  // Handle Basemap Switcher (Satellite vs Tactical Dark)
+  // Handle Basemap Switcher (Satellite vs Dark)
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -142,7 +141,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         updateWhenZooming: false,
         updateWhenIdle: true,
         keepBuffer: 6,
-        opacity: 0.9
+        opacity: 0.85
       }).addTo(map);
 
       baseTilesRef.current = sat;
@@ -160,7 +159,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         updateWhenZooming: false,
         updateWhenIdle: true,
         keepBuffer: 6,
-        opacity: 0.9
+        opacity: 0.85
       }).addTo(map);
 
       baseTilesRef.current = dark;
@@ -168,17 +167,19 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     }
   }, [basemapMode]);
 
-  // Handle Snappy Camera Fly-To target coordinates
+  // Handle Smooth Programmatic Fly-To Transitions
   useEffect(() => {
-    if (flyToCoords && mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([flyToCoords[1], flyToCoords[0]], flyToZoom, {
-        duration: 0.85,
-        easeLinearity: 0.4
-      });
-    }
+    const map = mapInstanceRef.current;
+    if (!map || !flyToCoords) return;
+
+    map.flyTo([flyToCoords[1], flyToCoords[0]], flyToZoom, {
+      animate: true,
+      duration: 1.4,
+      easeLinearity: 0.25
+    });
   }, [flyToCoords, flyToZoom]);
 
-  // Render Vector Layers & Dynamic Markers
+  // Render Operational Layers
   useEffect(() => {
     const map = mapInstanceRef.current;
     const group = layersGroupRef.current;
@@ -186,18 +187,19 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
     group.clearLayers();
 
-    // 1. Render OSM Industrial Facilities Layer (Cyan Polygons)
+    // 1. Render OSM Industrial Facilities (Polygons & Cyan Facility Markers)
     if (layersVisible.facilities && facilities) {
       facilities.forEach((fac) => {
         if (fac.geometry.type === 'Polygon') {
           const coords = fac.geometry.coordinates[0].map((pt: [number, number]) => [pt[1], pt[0]]);
           const poly = L.polygon(coords, {
             color: '#06B6D4',
-            weight: 2,
+            weight: 1.5,
             fillColor: '#06B6D4',
-            fillOpacity: 0.16,
-            dashArray: '5, 5'
+            fillOpacity: 0.12,
+            dashArray: '3, 4'
           });
+
           poly.bindTooltip(`
             <div style="font-family: inherit; font-size: 11px; line-height: 1.4;">
               <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;">
@@ -213,11 +215,28 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
             </div>
           `, { className: 'tactical-tooltip', sticky: true });
           group.addLayer(poly);
+
+          // Centroid factory icon
+          const avgLon = fac.geometry.coordinates[0].reduce((sum: number, p: [number, number]) => sum + p[0], 0) / fac.geometry.coordinates[0].length;
+          const avgLat = fac.geometry.coordinates[0].reduce((sum: number, p: [number, number]) => sum + p[1], 0) / fac.geometry.coordinates[0].length;
+          
+          const facIcon = L.divIcon({
+            html: `
+              <div style="width: 18px; height: 18px; border-radius: 4px; background: rgba(6,182,212,0.2); border: 1px solid #06B6D4; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #38BDF8;">
+                🏭
+              </div>
+            `,
+            className: 'custom-leaflet-marker',
+            iconSize: [18, 18],
+            iconAnchor: [9, 9]
+          });
+          const facMarker = L.marker([avgLat, avgLon], { icon: facIcon, zIndexOffset: 200 });
+          group.addLayer(facMarker);
         }
       });
     }
 
-    // 2. Render 2D Gaussian Plume Cones (Downwind Toxic Hazard Envelope)
+    // 2. Render 2D Gaussian Estimated Downwind Screening Zone Envelopes
     if (layersVisible.plumes) {
       incidents.forEach((inc) => {
         if (inc.properties.plume_geometry && (inc.properties.severity === 'CRITICAL' || inc.properties.risk_score >= 50)) {
@@ -226,14 +245,14 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
             color: '#EF4444',
             weight: 1.5,
             fillColor: '#EF4444',
-            fillOpacity: 0.28,
+            fillOpacity: 0.25,
             dashArray: '4, 4'
           });
           plumePoly.bindTooltip(`
             <div style="font-family: inherit; font-size: 11px; line-height: 1.4;">
               <div style="display: flex; align-items: center; gap: 5px; color: #F87171; font-weight: 800; margin-bottom: 4px;">
                 <span>⚠️</span>
-                <span>DOWNWIND TOXIC PLUME CONE</span>
+                <span>ESTIMATED DOWNWIND SCREENING ZONE</span>
               </div>
               <div style="color: #E2E8F0; margin-bottom: 2px;">
                 Target Incident: <strong>#${inc.properties.id}</strong>
@@ -242,7 +261,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                 Trajectory: <strong>WNW ──► ESE</strong> (Bearing 115°)
               </div>
               <div style="color: #F87171; font-size: 10px; margin-top: 3px; font-weight: 600;">
-                Evacuation Threat Radius: 1,400 meters downwind
+                Downwind Screening Extent: ~1,400 meters
               </div>
             </div>
           `, { className: 'tactical-tooltip', sticky: true });
@@ -302,20 +321,19 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       const matchedFac = facilities.find(f => f.properties.name === selectedInc.properties.facility_name);
       if (matchedFac && matchedFac.geometry.type === 'Polygon') {
         const ring = matchedFac.geometry.coordinates[0];
-        // Centroid of facility
         const avgLon = ring.reduce((sum: number, p: [number, number]) => sum + p[0], 0) / ring.length;
         const avgLat = ring.reduce((sum: number, p: [number, number]) => sum + p[1], 0) / ring.length;
         const [incLon, incLat] = selectedInc.geometry.coordinates;
 
         const offsetLine = L.polyline([[avgLat, avgLon], [incLat, incLon]], {
-          color: '#F59E0B',
+          color: '#38BDF8',
           weight: 2,
           dashArray: '4, 6'
         });
 
         offsetLine.bindTooltip(`
-          <div style="font-family: monospace; font-size: 11px; color: #FBBF24;">
-            📏 Geodesic Offset: ${selectedInc.properties.dist_to_facility_m}m (Outside Industrial Perimeter)
+          <div style="font-family: monospace; font-size: 11px; color: #38BDF8;">
+            📏 Proximity: ${selectedInc.properties.dist_to_facility_m}m to ${matchedFac.properties.name}
           </div>
         `, { className: 'tactical-tooltip', permanent: true, direction: 'center' });
 
@@ -323,7 +341,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       }
     }
 
-    // 5. Render Tactical Thermal Hotspot Markers
+    // 5. Render Tactical Live Thermal Hotspot Markers
     if (layersVisible.hotspots) {
       incidents.forEach((inc) => {
         const [lon, lat] = inc.geometry.coordinates;
@@ -335,23 +353,23 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         let markerHtml = '';
         if (isCritical) {
           markerHtml = `
-            <div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-              <div class="sonar-pulse" style="position: absolute; width: 32px; height: 32px; border-radius: 50%; background: rgba(239, 68, 68, 0.45); border: 2px solid #EF4444;"></div>
-              ${isSelected ? '<div style="position: absolute; width: 44px; height: 44px; border-radius: 50%; border: 2px dashed #00F0FF;"></div>' : ''}
+            <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              <div class="sonar-pulse" style="position: absolute; width: 34px; height: 34px; border-radius: 50%; background: rgba(239, 68, 68, 0.45); border: 2px solid #EF4444;"></div>
+              ${isSelected ? '<div style="position: absolute; width: 46px; height: 46px; border-radius: 50%; border: 2px dashed #00F0FF;"></div>' : ''}
               <div style="width: 16px; height: 16px; transform: rotate(45deg); background: #FFF; border: 2px solid #EF4444; box-shadow: 0 0 16px #EF4444; z-index: 2;"></div>
             </div>
           `;
         } else if (isRoutine) {
           markerHtml = `
-            <div style="position: relative; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-              ${isSelected ? '<div style="position: absolute; width: 32px; height: 32px; border-radius: 50%; border: 2px solid #00F0FF;"></div>' : ''}
+            <div style="position: relative; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              ${isSelected ? '<div style="position: absolute; width: 34px; height: 34px; border-radius: 50%; border: 2px solid #00F0FF;"></div>' : ''}
               <div style="width: 14px; height: 14px; border-radius: 50%; background: #1E1B4B; border: 2px solid #818CF8; box-shadow: 0 0 10px #818CF8;"></div>
             </div>
           `;
         } else {
           markerHtml = `
-            <div style="position: relative; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-              ${isSelected ? '<div style="position: absolute; width: 28px; height: 28px; border-radius: 50%; border: 2px solid #00F0FF;"></div>' : ''}
+            <div style="position: relative; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              ${isSelected ? '<div style="position: absolute; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #00F0FF;"></div>' : ''}
               <div style="width: 12px; height: 12px; border-radius: 50%; background: #2E220D; border: 2px solid #F59E0B; box-shadow: 0 0 6px #F59E0B;"></div>
             </div>
           `;
@@ -360,8 +378,8 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         const icon = L.divIcon({
           html: markerHtml,
           className: 'custom-leaflet-marker',
-          iconSize: [34, 34],
-          iconAnchor: [17, 17]
+          iconSize: [36, 36],
+          iconAnchor: [18, 18]
         });
 
         const marker = L.marker([lat, lon], { icon, zIndexOffset: isSelected ? 1000 : (isCritical ? 500 : 100) });
@@ -403,7 +421,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
             </div>
 
             <div style="color: #38BDF8; font-size: 9px; font-weight: 600; text-align: right;">
-              👉 Click marker to inspect dossier
+              👉 Click marker to inspect intelligence
             </div>
           </div>
         `, { 
@@ -417,17 +435,16 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       });
     }
 
-    // 6. Render Spatio-Temporal Candidate Thermal Events (Polygons, Peaks, Centroids, Dots)
+    // 6. Render Spatio-Temporal Candidate Thermal Events (Hulls, Trajectory, Peaks, Centroids)
     if (layersVisible.thermalEvents !== false && thermalEvents && thermalEvents.length > 0) {
       thermalEvents.forEach((ev) => {
         const isEvSelected = selectedThermalEventId === ev.id;
 
-        // 6a. Render Observation Spatial Extent (Convex Hull Geometry)
+        // 6a. Render Event Spatial Extent (Convex Hull Geometry)
         if (ev.convex_hull_geojson) {
           try {
             const geom = JSON.parse(ev.convex_hull_geojson);
             if (geom.type === 'Polygon' && geom.coordinates && geom.coordinates[0]) {
-              // GeoJSON is [lon, lat], Leaflet wants [lat, lon]
               const latlngs = geom.coordinates[0].map((pt: [number, number]) => [pt[1], pt[0]]);
               const hullPoly = L.polygon(latlngs, {
                 color: isEvSelected ? '#00F0FF' : '#F59E0B',
@@ -452,9 +469,6 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                   <div style="color: #94A3B8; font-size: 10px;">
                     Observations: <strong>${ev.observation_count}</strong> | Peak: <strong style="color: #F59E0B;">${ev.frp_peak_mw} MW</strong>
                   </div>
-                  <div style="color: #64748B; font-size: 9px; margin-top: 4px;">
-                    👉 Click to open Event Intelligence Drawer
-                  </div>
                 </div>
               `, { className: 'tactical-tooltip', sticky: true });
 
@@ -462,36 +476,45 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                 hullPoly.on('click', () => onSelectThermalEvent(ev.id));
               }
               group.addLayer(hullPoly);
-            } else if (geom.type === 'LineString' && geom.coordinates) {
-              const latlngs = geom.coordinates.map((pt: [number, number]) => [pt[1], pt[0]]);
-              const line = L.polyline(latlngs, {
-                color: isEvSelected ? '#00F0FF' : '#F59E0B',
-                weight: 2,
-                dashArray: '4, 4'
-              });
-              if (onSelectThermalEvent) {
-                line.on('click', () => onSelectThermalEvent(ev.id));
-              }
-              group.addLayer(line);
             }
           } catch (e) {
             // Skip unparseable geojson
           }
         }
 
-        // 6b. Render Peak Observation Diamond Marker
+        // 6b. Trajectory line connecting member observations when selected
+        if (isEvSelected && ev.observations && ev.observations.length > 1) {
+          const sortedObs = [...ev.observations].sort((a, b) => 
+            new Date(a.observed_at || '').getTime() - new Date(b.observed_at || '').getTime()
+          );
+          const trajPoints = sortedObs.map(o => [o.latitude, o.longitude] as [number, number]);
+          const trajLine = L.polyline(trajPoints, {
+            color: '#38BDF8',
+            weight: 2,
+            dashArray: '4, 4',
+            opacity: 0.8
+          });
+          trajLine.bindTooltip(`
+            <div style="font-family: monospace; font-size: 10px; color: #38BDF8;">
+              🛰️ Member Detection Sequence (${ev.observations.length} Passes)
+            </div>
+          `, { className: 'tactical-tooltip', sticky: true });
+          group.addLayer(trajLine);
+        }
+
+        // 6c. Render Peak Observation Diamond Marker
         if (ev.peak_latitude && ev.peak_longitude) {
           const peakIcon = L.divIcon({
             html: `
-              <div style="position: relative; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                <div style="position: absolute; width: 22px; height: 22px; border-radius: 50%; background: rgba(245, 158, 11, 0.35); filter: blur(2px);"></div>
-                ${isEvSelected ? '<div style="position: absolute; width: 34px; height: 34px; border: 2px dashed #00F0FF; border-radius: 50%;"></div>' : ''}
-                <div style="width: 13px; height: 13px; transform: rotate(45deg); background: #FEF08A; border: 2px solid #F59E0B; box-shadow: 0 0 10px #F59E0B; z-index: 5;"></div>
+              <div style="position: relative; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                <div style="position: absolute; width: 24px; height: 24px; border-radius: 50%; background: rgba(245, 158, 11, 0.35); filter: blur(2px);"></div>
+                ${isEvSelected ? '<div style="position: absolute; width: 36px; height: 36px; border: 2px dashed #00F0FF; border-radius: 50%;"></div>' : ''}
+                <div style="width: 14px; height: 14px; transform: rotate(45deg); background: #FEF08A; border: 2px solid #F59E0B; box-shadow: 0 0 12px #F59E0B; z-index: 5;"></div>
               </div>
             `,
             className: 'custom-leaflet-marker',
-            iconSize: [28, 28],
-            iconAnchor: [14, 14]
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
           });
 
           const peakMarker = L.marker([ev.peak_latitude, ev.peak_longitude], {
@@ -502,16 +525,13 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
           peakMarker.bindTooltip(`
             <div style="font-family: inherit; font-size: 11px; line-height: 1.4;">
               <div style="color: #FCD34D; font-weight: 800; font-size: 11px; margin-bottom: 2px;">
-                ◇ PEAK OBSERVATION (${ev.frp_peak_mw} MW)
+                ◇ PEAK FRP OBSERVATION (${ev.frp_peak_mw} MW)
               </div>
               <div style="color: #CBD5E1; font-size: 10px;">
                 Event: <span style="font-family: monospace;">#${ev.id}</span>
               </div>
               <div style="color: #94A3B8; font-size: 10px;">
                 Max Temp: <strong>${ev.max_brightness_kelvin} K</strong>
-              </div>
-              <div style="color: #38BDF8; font-size: 9px; margin-top: 4px; font-weight: 600;">
-                👉 Click to open Event Drawer
               </div>
             </div>
           `, { className: 'tactical-tooltip', sticky: true });
@@ -522,7 +542,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
           group.addLayer(peakMarker);
         }
 
-        // 6c. Render FRP-Weighted Centroid Crosshair Marker
+        // 6d. Render FRP-Weighted Centroid Crosshair Marker
         const centroidIcon = L.divIcon({
           html: `
             <div style="position: relative; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
@@ -551,7 +571,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         }
         group.addLayer(centroidMarker);
 
-        // 6d. Render Individual Member Satellite Observation Dots
+        // 6e. Render Individual Member Satellite Observation Dots
         if (layersVisible.rawObservations !== false && ev.observations) {
           ev.observations.forEach((obs) => {
             const dotIcon = L.divIcon({
@@ -587,115 +607,65 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   }, [incidents, facilities, thermalEvents, selectedIncidentId, selectedThermalEventId, layersVisible, onSelectIncident, onSelectThermalEvent]);
 
   return (
-    <div style={{ position: 'relative', flex: 1, height: '100%', overflow: 'hidden' }}>
-      <div ref={mapContainerRef} className="tactical-map" />
+    <div className="relative flex-1 h-full overflow-hidden select-none">
+      {/* 1. Leaflet Base Canvas */}
+      <div ref={mapContainerRef} className="tactical-map w-full h-full" />
 
-      {/* Photorealistic Satellite vs Tactical Dark Basemap Switcher */}
-      <div style={{
-        position: 'absolute',
-        bottom: '24px',
-        left: '20px',
-        backgroundColor: 'rgba(15, 20, 28, 0.9)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid var(--border-subtle)',
-        borderRadius: '8px',
-        padding: '4px',
-        display: 'flex',
-        gap: '4px',
-        zIndex: 400,
-        boxShadow: '0 4px 20px rgba(0,0,0,0.6)'
-      }}>
+      {/* 2. Map Viewport Dark Edge Gradient (integrates UI seamlessly) */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-[300]"
+        style={{
+          boxShadow: 'inset 0 0 60px 20px rgba(1, 4, 10, 0.75)'
+        }}
+      />
+
+      {/* 3. Photorealistic Satellite vs Tactical Dark Basemap Switcher */}
+      <div className="absolute bottom-12 right-20 bg-[#030a14]/85 backdrop-blur-md border border-cyan-500/20 rounded-lg p-1 flex gap-1 z-[400] shadow-xl font-mono text-xs">
         <button
           onClick={() => setBasemapMode('satellite')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '6px 10px',
-            borderRadius: '6px',
-            border: 'none',
-            backgroundColor: basemapMode === 'satellite' ? '#0F2937' : 'transparent',
-            color: basemapMode === 'satellite' ? 'var(--accent-cyan)' : 'var(--text-muted)',
-            fontWeight: 600,
-            fontSize: '11px',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease'
-          }}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-bold transition-all ${
+            basemapMode === 'satellite'
+              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+              : 'text-slate-400 hover:text-slate-200 border border-transparent'
+          }`}
         >
-          <Satellite size={14} />
-          <span>Photorealistic Satellite</span>
+          <Satellite className="w-3.5 h-3.5" />
+          <span>SATELLITE</span>
         </button>
 
         <button
           onClick={() => setBasemapMode('dark')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '6px 10px',
-            borderRadius: '6px',
-            border: 'none',
-            backgroundColor: basemapMode === 'dark' ? '#1E293B' : 'transparent',
-            color: basemapMode === 'dark' ? '#FFF' : 'var(--text-muted)',
-            fontWeight: 600,
-            fontSize: '11px',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease'
-          }}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-bold transition-all ${
+            basemapMode === 'dark'
+              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+              : 'text-slate-400 hover:text-slate-200 border border-transparent'
+          }`}
         >
-          <Moon size={14} />
-          <span>Tactical Dark</span>
+          <Moon className="w-3.5 h-3.5" />
+          <span>DARK</span>
         </button>
       </div>
 
-      {/* Tactical Compass & Cursor Coordinates HUD */}
-      <div style={{
-        position: 'absolute',
-        top: '70px',
-        right: '20px',
-        backgroundColor: 'rgba(15, 20, 28, 0.88)',
-        backdropFilter: 'blur(8px)',
-        border: '1px solid var(--border-subtle)',
-        borderRadius: '6px',
-        padding: '6px 10px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        fontSize: '11px',
-        color: '#CBD5E1',
-        zIndex: 400
-      }}>
-        <Compass size={14} color="#38BDF8" />
-        <span style={{ fontWeight: 700, letterSpacing: '0.05em' }}>NORTH 000°</span>
+      {/* 4. Tactical Compass HUD */}
+      <div className="absolute top-20 right-4 bg-[#030a14]/85 backdrop-blur-md border border-cyan-500/20 rounded-lg px-2.5 py-1.5 flex items-center gap-2 text-[11px] font-mono text-slate-300 z-[400] shadow-xl">
+        <Compass className="w-3.5 h-3.5 text-cyan-400" />
+        <span className="font-bold tracking-wider">NORTH 000°</span>
       </div>
 
-      {/* Real-time Cursor Coordinates HUD */}
+      {/* 5. Real-time Cursor Coordinates HUD */}
       {cursorCoords && (
-        <div style={{
-          position: 'absolute',
-          bottom: '24px',
-          right: '140px',
-          backgroundColor: 'rgba(15, 20, 28, 0.88)',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: '6px',
-          padding: '4px 10px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          fontSize: '10px',
-          color: 'var(--text-secondary)',
-          zIndex: 400,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.5)'
-        }}>
-          <Crosshair size={12} color="var(--accent-cyan)" />
-          <span className="font-mono">
+        <div className="absolute bottom-12 right-64 bg-[#030a14]/85 backdrop-blur-md border border-cyan-500/20 rounded-lg px-3 py-1 flex items-center gap-2 text-[10px] font-mono text-slate-300 z-[400] shadow-xl">
+          <Crosshair className="w-3 h-3 text-cyan-400" />
+          <span>
             {cursorCoords.lat > 0 ? `${cursorCoords.lat}° N` : `${Math.abs(cursorCoords.lat)}° S`}, {' '}
             {cursorCoords.lng > 0 ? `${cursorCoords.lng}° E` : `${Math.abs(cursorCoords.lng)}° W`}
           </span>
-          <span style={{ color: 'var(--text-muted)' }}>| WGS84</span>
+          <span className="text-white/20">|</span>
+          <span className="text-slate-400">WGS84</span>
         </div>
       )}
     </div>
   );
 };
+
+export default MapCanvas;
