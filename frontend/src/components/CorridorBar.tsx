@@ -18,22 +18,22 @@ export const CorridorBar: React.FC<CorridorBarProps> = ({ onFlyTo }) => {
   return (
     <div style={{
       position: 'absolute',
-      top: '58px',
+      top: '64px',
       left: '50%',
       transform: 'translateX(-50%)',
-      backgroundColor: 'rgba(15, 20, 28, 0.88)',
-      backdropFilter: 'blur(8px)',
-      border: '1px solid var(--border-subtle)',
-      borderRadius: '20px',
-      padding: '3px 8px',
+      backgroundColor: 'rgba(15, 20, 28, 0.92)',
+      backdropFilter: 'blur(10px)',
+      border: '1px solid rgba(56, 189, 248, 0.25)',
+      borderRadius: '24px',
+      padding: '4px 10px',
       display: 'flex',
       alignItems: 'center',
-      gap: '4px',
+      gap: '6px',
       zIndex: 400,
-      boxShadow: '0 4px 16px rgba(0,0,0,0.5)'
+      boxShadow: '0 6px 20px rgba(0,0,0,0.55)'
     }}>
-      <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px', paddingLeft: '4px' }}>
-        <MapPin size={11} color="var(--accent-cyan)" />
+      <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', paddingLeft: '4px', fontWeight: 600 }}>
+        <MapPin size={13} color="var(--accent-cyan)" />
         <span>Corridor:</span>
       </span>
 
@@ -44,11 +44,11 @@ export const CorridorBar: React.FC<CorridorBarProps> = ({ onFlyTo }) => {
           style={{
             backgroundColor: 'transparent',
             border: 'none',
-            borderRadius: '12px',
+            borderRadius: '14px',
             color: 'var(--text-secondary)',
-            fontSize: '10px',
+            fontSize: '11.5px',
             fontWeight: 600,
-            padding: '3px 8px',
+            padding: '4px 10px',
             cursor: 'pointer',
             transition: 'all 0.15s ease'
           }}

@@ -96,57 +96,57 @@ export const TriageRail: React.FC<TriageRailProps> = ({
   });
 
   return (
-    <aside className="w-[340px] xl:w-[360px] h-full flex flex-col shrink-0 border-r border-cyan-500/20 bg-[#050b14]/95 z-[400] text-white shadow-[10px_0_30px_rgba(0,0,0,0.7)] overflow-hidden select-none">
+    <aside className="w-[390px] xl:w-[430px] 2xl:w-[460px] h-full flex flex-col shrink-0 border-r border-cyan-500/25 bg-[#050b14]/95 z-[400] text-white shadow-[10px_0_30px_rgba(0,0,0,0.7)] overflow-hidden select-none">
       {/* 1. Primary Mode Tabs */}
-      <div className="grid grid-cols-2 p-1.5 bg-[#03070f] border-b border-white/[0.08] font-mono text-xs">
+      <div className="grid grid-cols-2 p-2 bg-[#03070f] border-b border-white/[0.08] font-mono text-sm">
         <button
           onClick={() => handleTabClick('incidents')}
-          className={`flex items-center justify-center gap-2 py-2 px-3 rounded-md font-bold transition-all ${
+          className={`flex items-center justify-center gap-2.5 py-2.5 px-3 rounded-lg font-bold transition-all text-xs sm:text-sm ${
             activeTab === 'incidents'
-              ? 'bg-red-500/20 text-red-300 border border-red-500/40 shadow-[0_0_10px_rgba(239,68,68,0.2)]'
+              ? 'bg-red-500/20 text-red-300 border border-red-500/50 shadow-[0_0_12px_rgba(239,68,68,0.25)]'
               : 'text-slate-400 hover:text-slate-200 border border-transparent'
           }`}
         >
-          <Flame className="w-3.5 h-3.5 text-red-400" />
+          <Flame className="w-4 h-4 text-red-400" />
           <span>INCIDENTS</span>
-          <span className="px-1.5 py-0.2 rounded bg-black/50 text-[10px] text-red-300 font-mono font-bold">
+          <span className="px-2 py-0.5 rounded bg-black/60 text-xs text-red-300 font-mono font-extrabold">
             {uniqueIncidents.length.toString().padStart(2, '0')}
           </span>
         </button>
 
         <button
           onClick={() => handleTabClick('events')}
-          className={`flex items-center justify-center gap-2 py-2 px-3 rounded-md font-bold transition-all ${
+          className={`flex items-center justify-center gap-2.5 py-2.5 px-3 rounded-lg font-bold transition-all text-xs sm:text-sm ${
             activeTab === 'events'
-              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
+              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.25)]'
               : 'text-slate-400 hover:text-slate-200 border border-transparent'
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <Sparkles className="w-4 h-4 text-amber-400" />
           <span>THERMAL EVENTS</span>
-          <span className="px-1.5 py-0.2 rounded bg-black/50 text-[10px] text-amber-300 font-mono font-bold">
+          <span className="px-2 py-0.5 rounded bg-black/60 text-xs text-amber-300 font-mono font-extrabold">
             {thermalEvents.length.toString().padStart(2, '0')}
           </span>
         </button>
       </div>
 
       {/* 2. Tactical Filter & Search Controls */}
-      <div className="p-3 border-b border-white/[0.08] bg-[#07111c] space-y-2.5">
+      <div className="p-3.5 border-b border-white/[0.08] bg-[#07111c] space-y-3">
         {/* Search Field */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#03070f] border border-white/10 text-xs">
-          <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-[#03070f] border border-white/10 text-sm">
+          <Search className="w-4 h-4 text-slate-400 shrink-0" />
           <input
             type="text"
             placeholder={activeTab === 'incidents' ? 'Filter by facility, city, or ID...' : 'Filter events by ID or location...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent text-white placeholder-slate-500 outline-none text-xs font-mono"
+            className="w-full bg-transparent text-white placeholder-slate-400 outline-none text-sm font-sans"
           />
         </div>
 
         {/* Filter Chips */}
         {activeTab === 'incidents' ? (
-          <div className="grid grid-cols-4 gap-1.5 font-mono text-[11px]">
+          <div className="grid grid-cols-4 gap-2 font-mono text-xs">
             {[
               { id: 'ALL', label: 'All', count: uniqueIncidents.length },
               { id: 'CRITICAL', label: 'Crit', count: uniqueIncidents.filter(i => i.properties.severity === 'CRITICAL').length },
@@ -156,19 +156,19 @@ export const TriageRail: React.FC<TriageRailProps> = ({
               <button
                 key={tab.id}
                 onClick={() => setFilterSeverity(tab.id)}
-                className={`py-1 px-1.5 rounded text-center transition-all ${
+                className={`py-1.5 px-2 rounded-lg text-center font-semibold transition-all ${
                   filterSeverity === tab.id
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 font-bold shadow-sm'
                     : 'bg-[#03070f] text-slate-400 hover:text-slate-200 border border-white/5'
                 }`}
               >
-                <span>{tab.label}</span> <span className="opacity-70 font-mono">({tab.count})</span>
+                <span>{tab.label}</span> <span className="opacity-75 font-mono">({tab.count})</span>
               </button>
             ))}
           </div>
         ) : (
-          <div className="space-y-2">
-            <div className="grid grid-cols-4 gap-1.5 font-mono text-[11px]">
+          <div className="space-y-2.5">
+            <div className="grid grid-cols-4 gap-2 font-mono text-xs">
               {[
                 { id: 'ALL' as const, label: 'All', count: thermalEvents.length },
                 { id: 'MULTI' as const, label: 'Multi', count: thermalEvents.filter(e => e.observation_count >= 2).length },
@@ -178,30 +178,30 @@ export const TriageRail: React.FC<TriageRailProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => setEventFilter(tab.id)}
-                  className={`py-1 px-1.5 rounded text-center transition-all ${
+                  className={`py-1.5 px-2 rounded-lg text-center font-semibold transition-all ${
                     eventFilter === tab.id
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 font-bold shadow-sm'
                       : 'bg-[#03070f] text-slate-400 hover:text-slate-200 border border-white/5'
                   }`}
                 >
-                  <span>{tab.label}</span> <span className="opacity-70 font-mono">({tab.count})</span>
+                  <span>{tab.label}</span> <span className="opacity-75 font-mono">({tab.count})</span>
                 </button>
               ))}
             </div>
 
             {onTriggerClustering && (
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <button
                   onClick={onTriggerClustering}
                   disabled={isClusteringLoading}
-                  className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-amber-950/30 hover:bg-amber-950/60 border border-amber-500/40 text-amber-300 font-mono text-[10px] font-bold transition-all disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-amber-950/40 hover:bg-amber-950/70 border border-amber-500/50 text-amber-300 font-mono text-xs font-bold transition-all disabled:opacity-50"
                 >
-                  <RefreshCw className={`w-3 h-3 ${isClusteringLoading ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-3.5 h-3.5 ${isClusteringLoading ? 'animate-spin' : ''}`} />
                   <span>{isClusteringLoading ? 'Running Graph Clustering...' : 'Run Spatio-Temporal Graph (750m/60m)'}</span>
                 </button>
 
                 {latestClusteringRun && (
-                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 px-1">
+                  <div className="flex items-center justify-between text-xs font-mono text-slate-400 px-1">
                     <span>Status: <strong className="text-slate-200">{latestClusteringRun.status}</strong></span>
                     <span className={latestClusteringRun.is_stale ? 'text-red-400 font-bold' : 'text-emerald-400 font-bold'}>
                       {latestClusteringRun.is_stale ? 'STALE' : 'FRESH'}
@@ -214,14 +214,14 @@ export const TriageRail: React.FC<TriageRailProps> = ({
         )}
       </div>
 
-      {/* 3. Tactical List Content with Comfortable 90–115px Cards */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+      {/* 3. Tactical List Content */}
+      <div className="flex-1 overflow-y-auto p-3.5 space-y-3">
         {activeTab === 'incidents' ? (
           filteredIncidents.length === 0 ? (
-            <div className="text-center py-16 px-4 text-slate-500 font-sans">
-              <ShieldCheck className="w-8 h-8 text-emerald-400 mx-auto mb-2 opacity-80" />
-              <div className="text-xs font-semibold text-slate-300">All facilities operating nominal</div>
-              <div className="text-[11px] text-slate-500 mt-1">Zero active detections match filter</div>
+            <div className="text-center py-20 px-4 text-slate-500 font-sans">
+              <ShieldCheck className="w-10 h-10 text-emerald-400 mx-auto mb-2.5 opacity-80" />
+              <div className="text-sm font-bold text-slate-300">All facilities operating nominal</div>
+              <div className="text-xs text-slate-500 mt-1">Zero active detections match filter</div>
             </div>
           ) : (
             filteredIncidents.map((inc) => {
@@ -231,36 +231,36 @@ export const TriageRail: React.FC<TriageRailProps> = ({
               const isRoutine = inc.properties.classification === 'PERSISTENT_OPERATIONAL_SOURCE';
 
               const stripeColor = isCritical ? '#EF4444' : isHigh ? '#F97316' : isRoutine ? '#818CF8' : '#38BDF8';
-              const badgeBg = isCritical ? 'rgba(239, 68, 68, 0.15)' : isHigh ? 'rgba(249, 115, 22, 0.15)' : isRoutine ? 'rgba(129, 140, 248, 0.15)' : 'rgba(56, 189, 248, 0.15)';
+              const badgeBg = isCritical ? 'rgba(239, 68, 68, 0.18)' : isHigh ? 'rgba(249, 115, 22, 0.18)' : isRoutine ? 'rgba(129, 140, 248, 0.18)' : 'rgba(56, 189, 248, 0.18)';
 
               return (
                 <div
                   key={inc.properties.id}
                   onClick={() => onSelectIncident(inc.properties.id)}
-                  className={`group relative flex overflow-hidden rounded-lg border transition-all cursor-pointer ${
+                  className={`group relative flex overflow-hidden rounded-xl border transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-[#0a182a] border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.25)]'
-                      : 'bg-[#07111c] border-white/10 hover:border-white/20 hover:bg-[#0a1622]'
+                      ? 'bg-[#0b1c32] border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.3)] ring-1 ring-cyan-400'
+                      : 'bg-[#07111c] border-white/10 hover:border-white/25 hover:bg-[#0a1828]'
                   }`}
                 >
                   {/* Left Severity Stripe Indicator */}
                   <div 
-                    className="w-1.5 shrink-0" 
+                    className="w-2 shrink-0" 
                     style={{ backgroundColor: stripeColor }} 
                   />
 
                   {/* Card Main Body */}
-                  <div className="flex-1 p-3 space-y-1.5">
+                  <div className="flex-1 p-3.5 space-y-2">
                     {/* Top Row: Risk Score + ID + Fly button */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2.5">
                         <span 
-                          className="px-2 py-0.5 rounded font-mono font-bold uppercase tracking-wider text-[10px] border"
+                          className="px-2.5 py-1 rounded-md font-mono font-extrabold uppercase tracking-wider text-xs border"
                           style={{ backgroundColor: badgeBg, color: stripeColor, borderColor: stripeColor }}
                         >
                           {inc.properties.risk_score} {inc.properties.severity}
                         </span>
-                        <span className="font-mono text-slate-400 font-bold text-[11px]">#{inc.properties.id}</span>
+                        <span className="font-mono text-slate-300 font-bold text-xs">#{inc.properties.id}</span>
                       </div>
 
                       <button
@@ -268,34 +268,34 @@ export const TriageRail: React.FC<TriageRailProps> = ({
                           e.stopPropagation();
                           onLocateIncident(inc.geometry.coordinates as [number, number]);
                         }}
-                        className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-cyan-300 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 transition-colors"
                         title="Locate incident on map"
                       >
-                        <Navigation className="w-3.5 h-3.5" />
+                        <Navigation className="w-4 h-4" />
                       </button>
                     </div>
 
                     {/* Facility / Location Title */}
                     <div>
-                      <div className="font-sans font-bold text-[13px] text-white leading-snug line-clamp-1">
+                      <div className="font-sans font-bold text-[15px] sm:text-base text-white leading-snug line-clamp-2">
                         {inc.properties.facility_name || 'Industrial Compound'}
                       </div>
                     </div>
 
                     {/* Classification */}
-                    <div className="text-[11px] text-slate-300 font-semibold uppercase tracking-wide truncate">
+                    <div className="text-xs text-slate-300 font-semibold uppercase tracking-wider truncate">
                       {inc.properties.classification.replace(/_/g, ' ')}
                     </div>
 
                     {/* Telemetry Row */}
-                    <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 border-t border-white/[0.06] pt-1.5">
+                    <div className="flex items-center justify-between text-xs font-mono text-slate-300 border-t border-white/[0.08] pt-2">
                       <div>
-                        FRP <strong className="text-amber-400 font-bold">{inc.properties.frp_total} MW</strong>
+                        FRP <strong className="text-amber-300 font-extrabold text-[13px]">{inc.properties.frp_total} MW</strong>
                       </div>
                       <div>
-                        ΔZ <strong className={inc.properties.frp_delta_zscore > 3 ? 'text-red-400 font-bold' : 'text-slate-200'}>+{inc.properties.frp_delta_zscore}σ</strong>
+                        ΔZ <strong className={inc.properties.frp_delta_zscore > 3 ? 'text-red-400 font-extrabold text-[13px]' : 'text-slate-200 font-bold text-[13px]'}>+{inc.properties.frp_delta_zscore}σ</strong>
                       </div>
-                      <div className="text-cyan-300 uppercase font-bold">
+                      <div className="text-cyan-300 uppercase font-extrabold text-xs">
                         {inc.properties.daynight === 'N' ? 'NIGHT' : 'DAY'}
                       </div>
                     </div>
@@ -307,10 +307,10 @@ export const TriageRail: React.FC<TriageRailProps> = ({
         ) : (
           /* THERMAL EVENTS QUEUE */
           filteredEvents.length === 0 ? (
-            <div className="text-center py-16 px-4 text-slate-500 font-sans">
-              <Sparkles className="w-8 h-8 text-amber-400 mx-auto mb-2 opacity-80" />
-              <div className="text-xs font-semibold text-slate-300">No thermal event clusters</div>
-              <div className="text-[11px] text-slate-500 mt-1">Run clustering to aggregate sensor passes</div>
+            <div className="text-center py-20 px-4 text-slate-500 font-sans">
+              <Sparkles className="w-10 h-10 text-amber-400 mx-auto mb-2.5 opacity-80" />
+              <div className="text-sm font-bold text-slate-300">No thermal event clusters</div>
+              <div className="text-xs text-slate-500 mt-1">Run clustering to aggregate sensor passes</div>
             </div>
           ) : (
             filteredEvents.map((ev) => {
@@ -324,27 +324,27 @@ export const TriageRail: React.FC<TriageRailProps> = ({
                 <div
                   key={ev.id}
                   onClick={() => onSelectThermalEvent && onSelectThermalEvent(ev.id)}
-                  className={`group relative flex overflow-hidden rounded-lg border transition-all cursor-pointer ${
+                  className={`group relative flex overflow-hidden rounded-xl border transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-[#151208] border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
-                      : 'bg-[#07111c] border-white/10 hover:border-white/20 hover:bg-[#0a1622]'
+                      ? 'bg-[#1e1909] border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.3)] ring-1 ring-amber-400'
+                      : 'bg-[#07111c] border-white/10 hover:border-white/25 hover:bg-[#0a1828]'
                   }`}
                 >
                   {/* Left Severity Stripe Indicator */}
                   <div 
-                    className="w-1.5 shrink-0" 
+                    className="w-2 shrink-0" 
                     style={{ backgroundColor: statusColor }} 
                   />
 
                   {/* Card Main Body */}
-                  <div className="flex-1 p-3 space-y-1.5">
+                  <div className="flex-1 p-3.5 space-y-2">
                     {/* Top Row: Event ID + Status */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-amber-400 font-bold font-mono text-[11px]">#{ev.id}</span>
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-amber-400 font-bold font-mono text-xs">#{ev.id}</span>
                         <span 
-                          className="px-1.5 py-0.2 rounded font-mono font-bold uppercase text-[10px] border"
-                          style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: statusColor, borderColor: statusColor }}
+                          className="px-2 py-0.5 rounded-md font-mono font-extrabold uppercase text-xs border"
+                          style={{ backgroundColor: 'rgba(245,158,11,0.18)', color: statusColor, borderColor: statusColor }}
                         >
                           {ev.status}
                         </span>
@@ -356,32 +356,34 @@ export const TriageRail: React.FC<TriageRailProps> = ({
                             e.stopPropagation();
                             onLocateThermalEvent([ev.centroid_longitude, ev.centroid_latitude]);
                           }}
-                          className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-amber-300 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-white/10 text-slate-300 hover:text-amber-300 transition-colors"
                           title="Locate event on map"
                         >
-                          <Navigation className="w-3.5 h-3.5" />
+                          <Navigation className="w-4 h-4" />
                         </button>
                       )}
                     </div>
 
                     {/* Title */}
-                    <div className="font-sans font-bold text-[13px] text-white leading-snug line-clamp-1">
-                      {ev.title}
+                    <div>
+                      <div className="font-sans font-bold text-[15px] sm:text-base text-white leading-snug line-clamp-2">
+                        {ev.title}
+                      </div>
                     </div>
 
                     {/* Observation Count & Spatial Extent */}
-                    <div className="flex items-center justify-between text-[11px] text-slate-300">
-                      <span>{ev.observation_count} Member Detections</span>
-                      <span className="text-cyan-300 font-mono">{ev.spatial_extent_km2} km² Extent</span>
+                    <div className="flex items-center justify-between text-xs text-slate-300">
+                      <span className="font-semibold">{ev.observation_count} Member Detections</span>
+                      <span className="text-cyan-300 font-mono font-bold">{ev.spatial_extent_km2} km² Extent</span>
                     </div>
 
                     {/* Peak FRP */}
-                    <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 border-t border-white/[0.06] pt-1.5">
+                    <div className="flex items-center justify-between text-xs font-mono text-slate-300 border-t border-white/[0.08] pt-2">
                       <div>
-                        PEAK: <strong className="text-amber-400 font-bold">{ev.frp_peak_mw} MW</strong>
+                        PEAK: <strong className="text-amber-300 font-extrabold text-[13px]">{ev.frp_peak_mw} MW</strong>
                       </div>
                       <div>
-                        TEMP: <strong className="text-slate-200">{ev.max_brightness_kelvin} K</strong>
+                        TEMP: <strong className="text-slate-200 font-bold text-[13px]">{ev.max_brightness_kelvin} K</strong>
                       </div>
                     </div>
                   </div>

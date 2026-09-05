@@ -1,4 +1,4 @@
-# THERMIVEX: AI-Based Industrial Fire & Persistent Thermal Source Intelligence Platform
+# PYRAVEX: AI-Based Industrial Fire & Persistent Thermal Source Intelligence Platform
 
 [![SIH 2026](https://img.shields.io/badge/SIH-2026-orange.svg)](https://sih.gov.in/)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
@@ -9,11 +9,11 @@
 
 > **Smart India Hackathon (SIH 2026) — Grand Finale Platform**  
 > **Problem Statement (SIH26162):** AI-Based Detection and Classification of Industrial Fires and Persistent Thermal Sources using NASA FIRMS, OSM & Satellite Data  
-> **GitHub Repository:** [kartikvermagit-ds/THERMIVEX](https://github.com/kartikvermagit-ds/THERMIVEX.git)
+> **GitHub Repository:** [kartikvermagit-ds/PYRAVEX](https://github.com/kartikvermagit-ds/PYRAVEX.git)
 
 ---
 
-## 1. What is THERMIVEX? (In Simple Terms)
+## 1. What is PYRAVEX? (In Simple Terms)
 
 Every single day, spaceborne satellite radiometers (VIIRS on NOAA-20/Suomi-NPP, and MODIS on Terra/Aqua) detect thousands of heat points (thermal anomalies) across the Indian subcontinent. 
 
@@ -21,9 +21,9 @@ However, standard satellite feeds provide only raw GPS coordinates without seman
 
 When every thermal source triggers an emergency alarm, disaster authorities suffer from **Alert Fatigue** and cannot prioritize real life-threatening disasters.
 
-**THERMIVEX** solves this crisis by combining spaceborne thermal radiometry, OpenStreetMap infrastructure geometries, 36 months of historical baseline tracking, and explainable machine learning:
+**PYRAVEX** solves this crisis by combining spaceborne thermal radiometry, OpenStreetMap infrastructure geometries, 36 months of historical baseline tracking, and explainable machine learning:
 
-| Feature | Standard NASA FIRMS Feed | THERMIVEX Platform |
+| Feature | Standard NASA FIRMS Feed | PYRAVEX Platform |
 | :--- | :--- | :--- |
 | **Alert Fatigue** | ❌ Lights up red on every refinery chimney daily | ✅ **Auto-suppresses routine flares** via 36-month baseline ($PI \ge 0.90$) |
 | **Spatial Precision** | ❌ 375m unreferenced coordinate point | ✅ **Geofenced to plant boundaries** (Direct Hit vs. Perimeter Offset) |
@@ -158,13 +158,13 @@ Use the **"Test Scenarios..."** dropdown in the top bar to run a live demonstrat
 - Click **`Jamnagar Refinery: Routine Operational Heat`**.
 - The camera flies to the world's largest refining complex.
 - Symbology turns **Purple Routine** (Risk 17/100).
-- Explain to jury: *"Our 36-month baseline proves this stack operates 94% of the year. Normal systems trigger sirens every day; THERMIVEX auto-suppresses it."*
+- Explain to jury: *"Our 36-month baseline proves this stack operates 94% of the year. Normal systems trigger sirens every day; PYRAVEX auto-suppresses it."*
 
 ### Step 2: Prove Agricultural False Positive Filtering (Ludhiana)
 - Click **`Ludhiana Focal Point: Agricultural Residue Burning`**.
 - The camera flies to Punjab. An amber ring appears with an **amber dashed geodesic vector line**.
 - The on-map measurement reads: `Offset: 1,210.4m (Outside Industrial Perimeter)`.
-- Explain: *"Crop stubble burning is occurring outside the factory perimeter. THERMIVEX isolates the offset and prevents dispatch waste."*
+- Explain: *"Crop stubble burning is occurring outside the factory perimeter. PYRAVEX isolates the offset and prevents dispatch waste."*
 
 ### Step 3: Trigger a Critical Disaster (Dahej Explosion)
 - Click **`Dahej PCPIR: Critical Chemical Tank Explosion`**.
@@ -208,7 +208,7 @@ Use the **"Test Scenarios..."** dropdown in the top bar to run a live demonstrat
 ## 9. Project Directory Layout
 
 ```
-THERMIVEX/
+PYRAVEX/
 ├── backend/
 │   ├── app/
 │   │   ├── api/v1/
@@ -260,5 +260,5 @@ THERMIVEX/
 ## 10. License & Acknowledgments
 
 * **License:** Released under the [MIT License](LICENSE).
-* **Smart India Hackathon 2026:** Developed by Team THERMIVEX for Problem Statement **SIH26162**.
+* **Smart India Hackathon 2026:** Developed by Team PYRAVEX for Problem Statement **SIH26162**.
 * **Data Sources:** NASA FIRMS (distributed under NASA Earth Science Open Data Policy), OpenStreetMap contributors (ODbL), and Esri World Imagery.

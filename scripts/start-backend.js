@@ -16,12 +16,12 @@ function getPythonCommand() {
 
 const pyCmd = getPythonCommand();
 if (!pyCmd) {
-  console.error('[THERMIVEX] Error: No Python interpreter found (tested: py, python3, python). Please ensure Python is installed.');
+  console.error('[PYRAVEX] Error: No Python interpreter found (tested: py, python3, python). Please ensure Python is installed.');
   process.exit(1);
 }
 
 const backendDir = path.join(__dirname, '..', 'backend');
-console.log(`[THERMIVEX BACKEND] Initializing FastAPI server via '${pyCmd}' in ${backendDir}...`);
+console.log(`[PYRAVEX BACKEND] Initializing FastAPI server via '${pyCmd}' in ${backendDir}...`);
 
 const child = spawn(
   pyCmd,

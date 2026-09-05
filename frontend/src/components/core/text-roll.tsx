@@ -94,7 +94,7 @@ export function TextRoll({
 export function TextRollBasic() {
   return (
     <TextRoll className="text-4xl text-black dark:text-white">
-      THERMIVEX
+      PYRAVEX
     </TextRoll>
   );
 }

@@ -12,7 +12,7 @@ import {
   ArrowRight,
   Database
 } from 'lucide-react';
-import { ThermivexLogo } from './ThermivexLogo';
+import { PyravexLogo } from './PyravexLogo';
 
 interface AboutPageProps {
   onBackToMap: () => void;
@@ -70,8 +70,8 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onBackToMap }) => {
             </span>
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
-            <ThermivexLogo size={42} showSubtitle={false} />
+          <div style={{ marginBottom: '18px' }}>
+            <PyravexLogo size={54} showBadge={true} />
           </div>
 
           <h1 style={{ fontSize: '26px', fontWeight: 800, color: '#FFF', marginBottom: '12px', letterSpacing: '-0.02em', lineHeight: 1.25 }}>
@@ -105,7 +105,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onBackToMap }) => {
             </button>
 
             <a
-              href="https://github.com/kartikvermagit-ds/THERMIVEX"
+              href="https://github.com/kartikvermagit-ds/PYRAVEX"
               target="_blank"
               rel="noreferrer"
               style={{
@@ -177,7 +177,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onBackToMap }) => {
               </ul>
             </div>
 
-            {/* THERMIVEX Solution */}
+            {/* PYRAVEX Solution */}
             <div style={{
               backgroundColor: '#0F141C',
               border: '1px solid #142820',
@@ -187,7 +187,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onBackToMap }) => {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: '#34D399', fontWeight: 700, fontSize: '14px' }}>
                 <ShieldCheck size={18} />
-                <span>The THERMIVEX Solution</span>
+                <span>The PYRAVEX Solution</span>
               </div>
               <ul style={{ listStyle: 'none', padding: 0, fontSize: '12px', color: '#94A3B8', display: 'flex', flexDirection: 'column', gap: '10px', lineHeight: 1.5 }}>
                 <li>✅ <strong>36-Month Thermal Baseline:</strong> Compares active heat against rolling facility history (ΔZ FRP Anomaly Surge) to auto-suppress routine flares (PI ≥ 0.90).</li>
@@ -321,7 +321,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onBackToMap }) => {
         }}>
           <div>
             <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFF' }}>
-              Team THERMIVEX — Smart India Hackathon 2026
+              Team PYRAVEX — Smart India Hackathon 2026
             </div>
             <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>
               Built with FastAPI, PostGIS, React 19, Leaflet, and Esri World Imagery. Released under the MIT License.

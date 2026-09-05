@@ -3,9 +3,9 @@ version: '3.8'
 services:
   postgis:
     image: postgis/postgis:16-3.4
-    container_name: thermivex_postgis
+    container_name: pyravex_postgis
     environment:
-      POSTGRES_DB: thermivex
+      POSTGRES_DB: pyravex
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgrespassword
     ports:
@@ -18,9 +18,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: thermivex_backend
+    container_name: pyravex_backend
     environment:
-      - DATABASE_URL=postgresql://postgres:postgrespassword@postgis:5432/thermivex
+      - DATABASE_URL=postgresql://postgres:postgrespassword@postgis:5432/pyravex
       - NASA_FIRMS_MAP_KEY=${NASA_FIRMS_MAP_KEY:-DEMO_KEY}
     ports:
       - "8000:8000"
@@ -32,7 +32,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: thermivex_frontend
+    container_name: pyravex_frontend
     ports:
       - "3000:80"
     depends_on:

@@ -78,7 +78,7 @@ def get_dossier_pdf(incident_id: str, db: Session = Depends(get_db)):
             leading=22,
             textColor=colors.HexColor('#0F172A')
         )
-        elements.append(Paragraph(f"THERMIVEX EMERGENCY INCIDENT DOSSIER #{inc.id}", title_style))
+        elements.append(Paragraph(f"PYRAVEX EMERGENCY INCIDENT DOSSIER #{inc.id}", title_style))
         elements.append(Spacer(1, 12))
 
         header_data = [
@@ -120,7 +120,7 @@ def get_dossier_pdf(incident_id: str, db: Session = Depends(get_db)):
         )
 
     except Exception:
-        content = f"THERMIVEX EMERGENCY DOSSIER\nIncident: {inc.id}\nFacility: {inc.facility_name}\nRisk Score: {inc.risk_score}/100\nSeverity: {inc.severity_label}\nFRP: {inc.frp_total} MW\nCoordinates: {inc.latitude}, {inc.longitude}\n"
+        content = f"PYRAVEX EMERGENCY DOSSIER\nIncident: {inc.id}\nFacility: {inc.facility_name}\nRisk Score: {inc.risk_score}/100\nSeverity: {inc.severity_label}\nFRP: {inc.frp_total} MW\nCoordinates: {inc.latitude}, {inc.longitude}\n"
         return Response(content=content, media_type="text/plain")
 
 @router.get("/sitrep/summary")
@@ -145,7 +145,7 @@ def get_sitrep_summary(db: Session = Depends(get_db)):
     return {
         "title": "NATIONAL INDUSTRIAL THERMAL HAZARD SITUATIONAL REPORT (SITREP)",
         "generated_at": now_utc,
-        "reporting_agency": "NDMA / THERMIVEX Spaceborne Early Warning Directorate",
+        "reporting_agency": "NDMA / PYRAVEX Spaceborne Early Warning Directorate",
         "threat_level": "RED ADVISORY" if critical_count > 0 else "AMBER WATCH",
         "macro_metrics": {
             "total_active_clusters": len(incidents),
@@ -209,12 +209,12 @@ def get_sitrep_markdown(db: Session = Depends(get_db)):
 ## 3. Mandatory Tactical Directives for District Emergency Officers
 {chr(10).join(sitrep['actionable_directives'])}
 
-*Document generated automatically by THERMIVEX Geospatial Early Warning Engine.*
+*Document generated automatically by PYRAVEX Geospatial Early Warning Engine.*
 """
     return Response(
         content=md_text,
         media_type="text/markdown",
-        headers={"Content-Disposition": "attachment; filename=THERMIVEX_National_SitRep.md"}
+        headers={"Content-Disposition": "attachment; filename=PYRAVEX_National_SitRep.md"}
     )
 
 @router.get("/sitrep/pdf")
@@ -295,7 +295,7 @@ def get_sitrep_pdf(db: Session = Depends(get_db)):
             textColor=colors.white
         )
 
-        elements.append(Paragraph("THERMIVEX NATIONAL SITUATIONAL REPORT (SITREP)", title_style))
+        elements.append(Paragraph("PYRAVEX NATIONAL SITUATIONAL REPORT (SITREP)", title_style))
         elements.append(Paragraph(
             f"<b>Agency:</b> {sitrep['reporting_agency']} | <b>Generated:</b> {sitrep['generated_at']}",
             subtitle_style
@@ -416,8 +416,8 @@ def get_sitrep_pdf(db: Session = Depends(get_db)):
         return StreamingResponse(
             buffer,
             media_type="application/pdf",
-            headers={"Content-Disposition": "attachment; filename=THERMIVEX_National_SitRep.pdf"}
+            headers={"Content-Disposition": "attachment; filename=PYRAVEX_National_SitRep.pdf"}
         )
     except Exception as e:
-        content = f"THERMIVEX SITREP EXCEPTION: {str(e)}\n\n"
+        content = f"PYRAVEX SITREP EXCEPTION: {str(e)}\n\n"
         return Response(content=content, media_type="text/plain")

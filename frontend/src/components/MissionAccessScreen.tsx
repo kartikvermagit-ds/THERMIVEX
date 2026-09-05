@@ -77,7 +77,7 @@ export const MissionAccessScreen: React.FC<MissionAccessScreenProps> = ({ onCont
   return (
     <main
       className="relative w-screen h-screen min-h-screen overflow-hidden bg-[#01040a] text-white select-none flex flex-col justify-between font-sans"
-      aria-label="THERMIVEX Satellite Mission Access Terminal"
+      aria-label="PYRAVEX Satellite Mission Access Terminal"
     >
       {/* ========================================================
           1. ULTRA-CRISP SATELLITE EARTH BACKGROUND
@@ -216,7 +216,7 @@ export const MissionAccessScreen: React.FC<MissionAccessScreenProps> = ({ onCont
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="text-white font-black tracking-[0.2em] text-lg sm:text-xl leading-none">
-                THERMIVEX
+                PYRAVEX
               </span>
               <span className="px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-400/40 text-[9px] font-mono font-bold text-cyan-300 tracking-wider">
                 ORBITAL INTELLIGENCE
@@ -257,7 +257,7 @@ export const MissionAccessScreen: React.FC<MissionAccessScreenProps> = ({ onCont
                   </div>
                   <div>
                     <MorphingDialogTitle className="text-xl font-bold tracking-wider text-white">
-                      THERMIVEX // SATELLITE THERMAL OBSERVATIONS
+                      PYRAVEX // SATELLITE THERMAL OBSERVATIONS
                     </MorphingDialogTitle>
                     <MorphingDialogSubtitle className="text-xs text-cyan-400 font-mono tracking-wide">
                       VIIRS & MODIS THERMAL ANOMALY PIPELINE
@@ -275,7 +275,7 @@ export const MissionAccessScreen: React.FC<MissionAccessScreenProps> = ({ onCont
                   className="space-y-3 text-xs text-slate-300 leading-relaxed font-sans mt-2"
                 >
                   <p>
-                    THERMIVEX ingests near real-time thermal anomaly and hotspot observations sourced from NASA FIRMS across polar-orbiting environmental satellites (Suomi-NPP, NOAA-20, NOAA-21, Terra, and Aqua).
+                    PYRAVEX ingests near real-time thermal anomaly and hotspot observations sourced from NASA FIRMS across polar-orbiting environmental satellites (Suomi-NPP, NOAA-20, NOAA-21, Terra, and Aqua).
                   </p>
                   <div className="grid grid-cols-2 gap-3 my-3 font-mono text-[11px]">
                     <div className="p-3 rounded-lg bg-[#020712] border border-white/10">
@@ -434,7 +434,7 @@ export const MissionAccessScreen: React.FC<MissionAccessScreenProps> = ({ onCont
                 className="text-4xl sm:text-5xl font-black tracking-[0.18em] text-white drop-shadow-[0_2px_24px_rgba(56,189,248,0.55)]"
                 duration={0.4}
               >
-                THERMIVEX
+                PYRAVEX
               </TextRoll>
             </div>
             <p className="text-[11px] sm:text-xs uppercase font-mono tracking-[0.2em] text-slate-300 font-medium mt-1.5">
@@ -568,7 +568,7 @@ export const MissionAccessScreen: React.FC<MissionAccessScreenProps> = ({ onCont
          ======================================================== */}
       <footer className="relative z-20 w-full border-t border-white/[0.08] bg-[#01040a]/80 backdrop-blur-md px-6 py-2.5 sm:px-10 sm:py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] font-mono tracking-widest text-slate-400">
         <div className="flex items-center gap-2">
-          <span className="text-white font-bold">THERMIVEX</span>
+          <span className="text-white font-bold">PYRAVEX</span>
           <span className="text-cyan-500">//</span>
           <span className="text-slate-400">SATELLITE INTELLIGENCE PLATFORM</span>
         </div>

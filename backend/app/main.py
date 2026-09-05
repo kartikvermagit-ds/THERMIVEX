@@ -58,15 +58,15 @@ def seed_database_if_empty():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Initializing THERMIVEX Database & Geospatial Engine...")
+    logger.info("Initializing PYRAVEX Database & Geospatial Engine...")
     Base.metadata.create_all(bind=engine)
     seed_database_if_empty()
-    logger.info("THERMIVEX Engine Ready.")
+    logger.info("PYRAVEX Engine Ready.")
     yield
-    logger.info("Shutting down THERMIVEX Engine.")
+    logger.info("Shutting down PYRAVEX Engine.")
 
 app = FastAPI(
-    title="THERMIVEX: Industrial Fire Intelligence API",
+    title="PYRAVEX: Industrial Fire Intelligence API",
     version="1.0.0",
     description="Mission-Critical Geospatial & Remote Sensing AI Engine for Industrial Fire Detection and Persistent Thermal Source Intelligence (SIH 2026).",
     lifespan=lifespan
@@ -95,7 +95,7 @@ app.include_router(events.router, prefix=settings.API_V1_STR)
 def health_check():
     return {
         "status": "HEALTHY",
-        "service": "THERMIVEX Geospatial Engine",
+        "service": "PYRAVEX Geospatial Engine",
         "version": "1.0.0",
         "mission": "Smart India Hackathon 2026"
     }

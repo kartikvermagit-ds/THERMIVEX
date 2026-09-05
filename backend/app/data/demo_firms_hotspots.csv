@@ -1,5 +1,5 @@
 # Synthetic demo thermal anomaly records placed near representative Indian industrial locations for pipeline and UI testing only.
-# SIH26162 THERMIVEX - DO NOT TREAT AS REAL NASA OBSERVATIONS. GROUND VERIFICATION REQUIRED.
+# SIH26162 PYRAVEX - DO NOT TREAT AS REAL NASA OBSERVATIONS. GROUND VERIFICATION REQUIRED.
 latitude,longitude,bright_ti4,scan,track,acq_date,acq_time,satellite,instrument,confidence,version,bright_ti5,frp,daynight
 21.68420,72.58310,384.6,0.38,0.36,2026-03-15,2134,NOAA-20,VIIRS,high,2.0NRT,292.0,86.4,N
 22.34120,69.83240,352.4,0.40,0.37,2026-03-15,2130,NOAA-20,VIIRS,nominal,2.0NRT,298.2,21.8,N

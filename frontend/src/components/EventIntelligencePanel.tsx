@@ -272,7 +272,7 @@ export const EventIntelligencePanel: React.FC<EventIntelligencePanelProps> = ({
         <div className="grid grid-cols-2 gap-2">
           <a
             href={getSitRepPdfUrl()}
-            download="THERMIVEX_SitRep.pdf"
+            download="PYRAVEX_SitRep.pdf"
             className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded bg-red-950/40 hover:bg-red-950/70 border border-red-500/40 text-red-300 font-mono text-[11px] font-semibold text-center transition-colors"
           >
             <FileText className="w-3 h-3 text-red-400" />

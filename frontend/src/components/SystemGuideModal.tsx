@@ -44,7 +44,7 @@ export const SystemGuideModal: React.FC<SystemGuideModalProps> = ({ isOpen, onCl
         }}>
           <div>
             <div style={{ fontSize: '15px', fontWeight: 800, color: '#FFF' }}>
-              THERMIVEX SYSTEM EXPLAINER
+              PYRAVEX SYSTEM EXPLAINER
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
               How spaceborne sensors & AI classify industrial fires vs. routine heat

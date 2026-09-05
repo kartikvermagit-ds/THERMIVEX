@@ -2,9 +2,9 @@ import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "THERMIVEX Industrial Fire Intelligence"
+    PROJECT_NAME: str = "PYRAVEX Industrial Fire Intelligence"
     API_V1_STR: str = "/api/v1"
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./thermivex.db")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./pyravex.db")
     NASA_FIRMS_MAP_KEY: str = os.getenv("NASA_FIRMS_MAP_KEY", "DEMO_KEY")
     CORS_ORIGINS: list[str] = ["*"]
     DATA_DIR: str = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")

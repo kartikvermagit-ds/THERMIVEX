@@ -1,7 +1,7 @@
 {
   "type": "FeatureCollection",
   "description": "Synthetic demo thermal anomaly records placed near representative Indian industrial locations for pipeline and UI testing only.",
-  "note": "SIH26162 THERMIVEX - DO NOT TREAT AS REAL NASA OBSERVATIONS. GROUND VERIFICATION REQUIRED.",
+  "note": "SIH26162 PYRAVEX - DO NOT TREAT AS REAL NASA OBSERVATIONS. GROUND VERIFICATION REQUIRED.",
   "features": [
     {
       "type": "Feature",

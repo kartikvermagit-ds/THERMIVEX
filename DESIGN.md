@@ -1,5 +1,5 @@
 ---
-name: THERMIVEX Tactical Aerospace UI
+name: PYRAVEX Tactical Aerospace UI
 colors:
   surface: '#07090e'
   surface-dim: '#05070a'
@@ -113,12 +113,12 @@ spacing:
   xxl: 32px
 ---
 
-# THERMIVEX Design System Specification
+# PYRAVEX Design System Specification
 
 ## 1. Executive Summary & Creative North Star
 **Creative North Star: "Orbital Overwatch & Tactical Emergency Command"**
 
-THERMIVEX is an aerospace-grade, mission-critical dashboard designed for national disaster response authorities (NDMA, State Fire Services, Industrial Safety Directorates). The platform transforms raw, unreferenced thermal anomalies from NASA FIRMS satellites into actionable, geofenced tactical intelligence.
+PYRAVEX is an aerospace-grade, mission-critical dashboard designed for national disaster response authorities (NDMA, State Fire Services, Industrial Safety Directorates). The platform transforms raw, unreferenced thermal anomalies from NASA FIRMS satellites into actionable, geofenced tactical intelligence.
 
 The visual signature is **Precision Tactical Dark Mode**:
 * **Zero Visual Clutter:** In life-and-death industrial explosions, cognitive overhead must be zero. Every millisecond counts.
@@ -212,7 +212,7 @@ The Leaflet GIS Canvas runs on top of a 1-meter high-resolution **Esri World Ima
 
 ### A. Top Navigation Bar (`TopNav.tsx`)
 * **Height:** 56px fixed header.
-* **Left Section:** THERMIVEX Vector Logo with pulsing status dot (`LIVE SATELLITE FEED`).
+* **Left Section:** PYRAVEX Vector Logo with pulsing status dot (`LIVE SATELLITE FEED`).
 * **Center Section:** Quick-filter tabs (`ALL INCIDENTS`, `CRITICAL (90+)`, `UNRESOLVED DISPATCHES`).
 * **Right Section:** Universal timekeeper (UTC + IST toggle), active satellite pass status, and National SitRep export trigger.
 

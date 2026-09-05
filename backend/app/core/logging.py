@@ -7,7 +7,7 @@ def setup_logging():
         format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
         handlers=[logging.StreamHandler(sys.stdout)]
     )
-    logger = logging.getLogger("thermivex")
+    logger = logging.getLogger("pyravex")
     return logger
 
 logger = setup_logging()

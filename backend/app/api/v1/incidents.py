@@ -99,7 +99,7 @@ def export_incidents_geojson(db: Session = Depends(get_db)):
     return Response(
         content=content,
         media_type="application/geo+json",
-        headers={"Content-Disposition": "attachment; filename=thermivex_incidents.geojson"}
+        headers={"Content-Disposition": "attachment; filename=pyravex_incidents.geojson"}
     )
 
 @router.get("/{incident_id}/investigate")

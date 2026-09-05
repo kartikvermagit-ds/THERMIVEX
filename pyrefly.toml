@@ -1,4 +1,4 @@
-# Pyrefly configuration for THERMIVEX
+# Pyrefly configuration for PYRAVEX
 python-interpreter-path = "C:/Users/hp/AppData/Local/Programs/Python/Python312/python.exe"
 search-path = [".", "backend"]
 disable-type-errors-in-ide = true
