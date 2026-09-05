@@ -11,6 +11,7 @@ import { MapLegend } from './components/MapLegend';
 import { SystemGuideModal } from './components/SystemGuideModal';
 import { AboutPage } from './components/AboutPage';
 import { ClimateSlideStrip } from './components/ClimateSlideStrip';
+import { NoiseBackgroundDemo } from './components/NoiseBackgroundDemo';
 import type { 
   IncidentFeature, 
   FacilityFeature, 
@@ -38,6 +39,7 @@ import {
 } from './services/eventsService';
 
 export const App: React.FC = () => {
+  const [showLogin, setShowLogin] = useState<boolean>(true);
   const [incidents, setIncidents] = useState<IncidentFeature[]>([]);
   const [facilities, setFacilities] = useState<FacilityFeature[]>([]);
   const [thermalEvents, setThermalEvents] = useState<ThermalEvent[]>([]);
@@ -253,6 +255,10 @@ export const App: React.FC = () => {
     if (selectedPassTime === 'all') return true;
     return inc.properties.acq_time.startsWith(selectedPassTime.substring(0, 2));
   });
+
+  if (showLogin) {
+    return <NoiseBackgroundDemo onContinue={() => setShowLogin(false)} />;
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden' }}>
