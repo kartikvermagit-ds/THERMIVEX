@@ -1,5 +1,6 @@
 import io
 import datetime
+from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
@@ -13,18 +14,18 @@ router = APIRouter(prefix="/reports", tags=["Reports"])
 @router.get("/dossier/{incident_id}/json")
 def get_dossier_json(incident_id: str, db: Session = Depends(get_db)):
     """Returns structured tactical dossier for post-incident audit."""
-    inc = db.query(IncidentEvent).filter(IncidentEvent.id == incident_id).first()
+    inc: Any = db.query(IncidentEvent).filter(IncidentEvent.id == incident_id).first()
     if not inc:
         raise HTTPException(status_code=404, detail="Incident not found.")
 
     shap_factors = generate_shap_attributions(
-        frp=inc.frp_total,
-        delta_z=inc.frp_delta_zscore,
-        dist_to_facility_m=inc.dist_to_facility_m,
-        facility_name=inc.facility_name or "",
-        daynight=inc.daynight,
-        temp_diff=inc.temp_differential,
-        predicted_class=inc.classification
+        frp=float(inc.frp_total),
+        delta_z=float(inc.frp_delta_zscore),
+        dist_to_facility_m=float(inc.dist_to_facility_m) if inc.dist_to_facility_m is not None else 0.0,
+        facility_name=str(inc.facility_name or ""),
+        daynight=str(inc.daynight),
+        temp_diff=float(inc.temp_differential),
+        predicted_class=str(inc.classification)
     )
 
     return {
@@ -36,7 +37,7 @@ def get_dossier_json(incident_id: str, db: Session = Depends(get_db)):
         "facility_name": inc.facility_name,
         "distance_to_boundary_m": inc.dist_to_facility_m,
         "telemetry": {
-            "coordinates": [round(inc.longitude, 5), round(inc.latitude, 5)],
+            "coordinates": [round(float(inc.longitude), 5), round(float(inc.latitude), 5)],
             "timestamp_utc": f"{inc.acq_date} {inc.acq_time} UTC",
             "satellite": inc.satellite,
             "daynight": inc.daynight,
@@ -55,19 +56,19 @@ def get_dossier_json(incident_id: str, db: Session = Depends(get_db)):
 @router.get("/dossier/{incident_id}/pdf")
 def get_dossier_pdf(incident_id: str, db: Session = Depends(get_db)):
     """Generates and streams a tactical incident briefing PDF."""
-    inc = db.query(IncidentEvent).filter(IncidentEvent.id == incident_id).first()
+    inc: Any = db.query(IncidentEvent).filter(IncidentEvent.id == incident_id).first()
     if not inc:
         raise HTTPException(status_code=404, detail="Incident not found.")
 
     try:
         from reportlab.lib.pagesizes import letter
         from reportlab.lib import colors
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Flowable
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
-        elements = []
+        elements: list[Flowable] = []
         styles = getSampleStyleSheet()
 
         title_style = ParagraphStyle(
@@ -81,12 +82,12 @@ def get_dossier_pdf(incident_id: str, db: Session = Depends(get_db)):
         elements.append(Spacer(1, 12))
 
         header_data = [
-            ["Incident ID:", inc.id, "Classification:", inc.classification],
-            ["Facility:", inc.facility_name or "Unknown", "Severity:", inc.severity_label],
+            ["Incident ID:", str(inc.id), "Classification:", str(inc.classification)],
+            ["Facility:", str(inc.facility_name or "Unknown"), "Severity:", str(inc.severity_label)],
             ["Risk Score:", f"{inc.risk_score} / 100", "Detection Time:", f"{inc.acq_date} {inc.acq_time} UTC"],
-            ["Coordinates:", f"{inc.latitude:.4f}° N, {inc.longitude:.4f}° E", "Satellite:", f"{inc.satellite} ({inc.daynight})"],
-            ["FRP (Power):", f"{inc.frp_total:.1f} MW", "Thermal Differential:", f"+{inc.temp_differential:.1f} K"],
-            ["Anomaly Surge:", f"+{inc.frp_delta_zscore:.1f} Sigma", "Persistence Index:", f"{inc.persistence_index:.2f}"]
+            ["Coordinates:", f"{float(inc.latitude):.4f}° N, {float(inc.longitude):.4f}° E", "Satellite:", f"{inc.satellite} ({inc.daynight})"],
+            ["FRP (Power):", f"{float(inc.frp_total):.1f} MW", "Thermal Differential:", f"+{float(inc.temp_differential):.1f} K"],
+            ["Anomaly Surge:", f"+{float(inc.frp_delta_zscore):.1f} Sigma", "Persistence Index:", f"{float(inc.persistence_index):.2f}"]
         ]
         t = Table(header_data, colWidths=[120, 150, 120, 150])
         t.setStyle(TableStyle([
@@ -127,15 +128,15 @@ def get_sitrep_summary(db: Session = Depends(get_db)):
     """
     Returns an aggregated National Situational Report (SitRep) for disaster management command centers.
     """
-    incidents = db.query(IncidentEvent).all()
-    dispatches = db.query(AlertDispatch).all()
+    incidents: Any = db.query(IncidentEvent).all()
+    dispatches: Any = db.query(AlertDispatch).all()
 
     critical_count = sum(1 for i in incidents if i.severity_label == "CRITICAL")
     high_count = sum(1 for i in incidents if i.severity_label == "HIGH")
     routine_count = sum(1 for i in incidents if i.classification == "PERSISTENT_OPERATIONAL_SOURCE")
-    total_frp = sum(i.frp_total for i in incidents)
+    total_frp = sum(float(i.frp_total) for i in incidents)
 
-    top_incident = None
+    top_incident: Any = None
     if incidents:
         top_incident = max(incidents, key=lambda x: x.risk_score)
 
@@ -151,7 +152,7 @@ def get_sitrep_summary(db: Session = Depends(get_db)):
             "critical_disasters": critical_count,
             "high_risk_perimeters": high_count,
             "routine_flaring_sources": routine_count,
-            "cumulative_radiative_flux_mw": round(total_frp, 1),
+            "cumulative_radiative_flux_mw": round(float(total_frp), 1),
             "total_emergency_dispatches": len(dispatches)
         },
         "highest_priority_target": {
@@ -159,8 +160,8 @@ def get_sitrep_summary(db: Session = Depends(get_db)):
             "facility_name": top_incident.facility_name if top_incident else None,
             "risk_score": top_incident.risk_score if top_incident else 0,
             "severity": top_incident.severity_label if top_incident else "NONE",
-            "frp_mw": top_incident.frp_total if top_incident else 0,
-            "location": f"{top_incident.latitude:.4f}° N, {top_incident.longitude:.4f}° E" if top_incident else None
+            "frp_mw": float(top_incident.frp_total) if top_incident else 0.0,
+            "location": f"{float(top_incident.latitude):.4f}° N, {float(top_incident.longitude):.4f}° E" if top_incident else None
         },
         "actionable_directives": [
             "1. Priority mobilization of industrial foam tenders to Dahej PCPIR Sector 3.",
@@ -224,12 +225,12 @@ def get_sitrep_pdf(db: Session = Depends(get_db)):
     sitrep = get_sitrep_summary(db)
     m = sitrep["macro_metrics"]
     target = sitrep["highest_priority_target"]
-    incidents = db.query(IncidentEvent).order_by(IncidentEvent.risk_score.desc()).all()
+    incidents: Any = db.query(IncidentEvent).order_by(IncidentEvent.risk_score.desc()).all()
 
     try:
         from reportlab.lib.pagesizes import letter
         from reportlab.lib import colors
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Flowable
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
         buffer = io.BytesIO()
@@ -241,7 +242,7 @@ def get_sitrep_pdf(db: Session = Depends(get_db)):
             topMargin=36,
             bottomMargin=36
         )
-        elements = []
+        elements: list[Flowable] = []
         styles = getSampleStyleSheet()
 
         title_style = ParagraphStyle(
@@ -386,12 +387,12 @@ def get_sitrep_pdf(db: Session = Depends(get_db)):
         ]
         for inc in incidents[:10]:
             table_rows.append([
-                Paragraph(inc.id, cell_style),
-                Paragraph((inc.facility_name or "Unknown")[:22], cell_style),
-                Paragraph(inc.classification.replace('_', ' ')[:16], cell_style),
+                Paragraph(str(inc.id), cell_style),
+                Paragraph(str(inc.facility_name or "Unknown")[:22], cell_style),
+                Paragraph(str(inc.classification).replace('_', ' ')[:16], cell_style),
                 Paragraph(f"{inc.risk_score}", cell_bold),
-                Paragraph(f"{inc.frp_total:.1f} MW", cell_style),
-                Paragraph(f"{inc.latitude:.3f}, {inc.longitude:.3f}", cell_style)
+                Paragraph(f"{float(inc.frp_total):.1f} MW", cell_style),
+                Paragraph(f"{float(inc.latitude):.3f}, {float(inc.longitude):.3f}", cell_style)
             ])
         inc_table = Table(table_rows, colWidths=[65, 140, 140, 45, 65, 85])
         inc_table.setStyle(TableStyle([
@@ -420,4 +421,3 @@ def get_sitrep_pdf(db: Session = Depends(get_db)):
     except Exception as e:
         content = f"THERMIVEX SITREP EXCEPTION: {str(e)}\n\n"
         return Response(content=content, media_type="text/plain")
-
